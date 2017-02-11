@@ -1,0 +1,4 @@
+RGBImage		KEYWORD1
+ColorType		KEYWORD1
+Screen			KEYWORD1
+TimerAction		KEYWORD1
