@@ -1,25 +1,31 @@
 # RGB LED Matrix Hardware
 The design approach to  these RGB LED matrices is intended to be simple, leveraging low cost components like the 74HC595 shift register. 
 ## Design Approach
-The general hardware design of the matrix is to use shift registers to drive the matrix. Here, we use 4 pin RGB LEDs with a common anode. The RGB LED anodes are connected into rows, and the cathodes are connected into columns aligned with the colors of each LED. To light any particular LED color, its row should be powered and the column sinked. If common cathode LEDs were used instead, this would be swapped with the rows becoming sinks and the columns being power source. The shift registers are connected in serial such that the most significant bit (MSB) being the first LED column and the least significant bit (LSB) being the last row.
+The general hardware design of the matrix is to use shift registers to drive the matrix. Here, we use 4 pin RGB LEDs with a common anode. The RGB LED anodes are connected into rows, and the cathodes are connected into columns aligned with the colors of each LED. To light any particular LED color, its row should be powered and the column sinked. If common cathode LEDs were used instead, this would be swapped with the rows becoming sinks and the columns being power source. The shift registers are connected in serial such that the most significant bit (MSB) being the first LED column and the least significant bit (LSB) being the first row.
 
 
 Consider the following 4x4 RGB matrix:
 ```
- RGB--RGB--RGB--RGB- R1
- |||  |||  |||  |||
- RGB--RGB--RGB--RGB- R2
- |||  |||  |||  |||
- RGB--RGB--RGB--RGB- R3
- |||  |||  |||  |||
- RGB--RGB--RGB--RGB- R4
- |||  |||  |||  |||
- CCC  CCC  CCC  CCC
- 000  000  000  111
- 123  456  789  012
- ```
- 
-In this case, Q0 of the first 74HC595 (U1) would be attached to C01, Q1 to C02, and so on. Since there are 12 column and 4 rows, two 8-bit shift registers are needed. So the second 74HC595 (U2) could have it's SER pin tied to the SER' pin (sometimes called Q7') from U1, and would have its Q0 attached to C09, and its Q4 connected to R1 through Q7 connecting to R4.
+                 Serial Bit Stream
+    					  |
+ RGB--RGB--RGB--RGB- R1  LSB
+ |||  |||  |||  |||       | 
+ RGB--RGB--RGB--RGB- R2   |
+ |||  |||  |||  |||       |
+ RGB--RGB--RGB--RGB- R3   |
+ |||  |||  |||  |||       |
+ RGB--RGB--RGB--RGB- R4   |
+ |||  |||  |||  |||       |
+ CCC  CCC  CCC  CCC       |
+ 000  000  000  111       |
+ 123  456  789  012       |
+ 						  |
+ MSB <--------------------+
+```
+
+Since there are 16 bits needed to control the rows and columns, two 74HC595 shift registers will be used. The first one, U1, will contain the MSB, which will be the first bit shifted out. Give that, U1 should be a downstream slave to U2 and the MSB ultimately will reside in the Q7 pin of U1. U1's SER pin will need to be connected to the SER' (aka Q7') pin on U2. The input serial stream flows into U2, so the LSB will be on Q0 of U2.
+
+In this case, Q7 of the first 74HC595 (U1) would be attached to C01, Q6 to C02, and so on. Since there are 12 column and 4 rows, two 8-bit shift registers are needed. So the second 74HC595 (U2) would have its Q0 through Q3 attached to R1 through R4, and its Q4 through Q7 attached to C12 down through C09. In this configuration, the first bit shifted out in an update cycle is for C01, and the last bit shifted out is for R1.
 
 In this common anode set up, the rows would be "on" when the proper 74HC595 pin is in the `high` state and the column would "on" when its respective pin is in the `low` state. Basically, the shift register is sinking the columns and powering the rows. This would be inversed if you are using a common cathode RGB LED. 
 
