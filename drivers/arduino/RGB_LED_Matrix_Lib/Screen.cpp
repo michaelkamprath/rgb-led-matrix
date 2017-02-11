@@ -1,3 +1,21 @@
+//     RGB Matrix Project - Screen
+//     Copyright (C) 2017 Michael Kamprath
+//
+//     This file is part of RGB Matrix Project.
+// 
+//     RGB Matrix Project is free software: you can redistribute it and/or modify
+//     it under the terms of the GNU General Public License as published by
+//     the Free Software Foundation, either version 3 of the License, or
+//     (at your option) any later version.
+// 
+//     RGB Matrix Project is distributed in the hope that it will be useful,
+//     but WITHOUT ANY WARRANTY; without even the implied warranty of
+//     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//     GNU General Public License for more details.
+// 
+//     You should have received a copy of the GNU General Public License
+//     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <Arduino.h>
 #include "Screen.h"
 
@@ -7,7 +25,7 @@ Screen::Screen(
 	int latchPin,
 	int clockPin,
 	int dataPin
-) :		TimerAction(400),
+) :		TimerAction(100),
 		_latchPin(latchPin),
 		_clockPin(clockPin),
 		_dataPin(dataPin),
@@ -65,6 +83,9 @@ void Screen::action() {
 	for (int col = _columns - 1; col >= 0; col--) {
 		short rgbValue = _screen_data.pixel(_scanRow,col);
 
+		// a form of Binary Code Modulation is used to control
+		// the LED intensity at variou levels.
+		
 		// blue
 		short blueValue = (rgbValue & BLUE_MASK)>>BLUE_BIT_SHIFT;
 		if (blueValue && _scanPass <= blueValue*blueValue ) {
