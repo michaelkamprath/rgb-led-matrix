@@ -55,40 +55,32 @@ void Screen::action() {
 	if (_scanRow == 0 && _scanPass == 1 && !_drawingActive) {
 		_screen_data.copy(_screen_buf);
 	}
-	// first, turn everything off to account for slow switching transistors on the rows
-	// that may "leak" some power into the last turned off row by still be partially on
-	// when the new row turn on.
+	// first, turn everything off to account for slow switching transistors on the rows 
+	// and slow 74HC595 that may "leak" some power into the last turned off row by still 
+	// be partially on when the new row turn on.
+	
+    for (int i = 0; i < _columns; i++) {
+        shiftOutBit(HIGH); // red
+        shiftOutBit(HIGH); // green
+        shiftOutBit(HIGH); // blue
+    }
 	for (int i = _rows - 1; i >= 0; i-- ) {
 		shiftOutBit(HIGH);
 	}
-	for (int col = _columns - 1; col >= 0; col--) {
-		shiftOutBit(HIGH);  // red
-		shiftOutBit(HIGH);  // green
-		shiftOutBit(HIGH);  // blue
-	}
+	
 	digitalWrite(_latchPin, HIGH);
 	digitalWrite(_latchPin, LOW);
 
-	// now write out the row bits
-	for (int i = _rows - 1; i >= 0; i-- ) {
-		if (i == _scanRow) {
-			// shift out row bit
-			shiftOutBit(LOW);
-		}
-		else {
-			shiftOutBit(HIGH);
-		}
-	}
 
-	for (int col = _columns - 1; col >= 0; col--) {
+	for (int col = 0; col < _columns; col++) {
 		short rgbValue = _screen_data.pixel(_scanRow,col);
 
 		// a form of Binary Code Modulation is used to control
 		// the LED intensity at variou levels.
 		
-		// blue
-		short blueValue = (rgbValue & BLUE_MASK)>>BLUE_BIT_SHIFT;
-		if (blueValue && _scanPass <= blueValue*blueValue ) {
+		// red
+		short redValue = (rgbValue & RED_MASK)>>RED_BIT_SHIFT;
+		if (redValue && _scanPass <= redValue*redValue ) {
 			shiftOutBit(LOW);
 		}
 		else {
@@ -104,16 +96,27 @@ void Screen::action() {
 			shiftOutBit(HIGH);
 		}
 
-		// red
-		short redValue = (rgbValue & RED_MASK)>>RED_BIT_SHIFT;
-		if (redValue && _scanPass <= redValue*redValue ) {
+		// blue
+		short blueValue = (rgbValue & BLUE_MASK)>>BLUE_BIT_SHIFT;
+		if (blueValue && _scanPass <= blueValue*blueValue ) {
 			shiftOutBit(LOW);
 		}
 		else {
 			shiftOutBit(HIGH);
 		}
-
 	}
+	
+		// now write out the row bits
+	for (int i = _rows - 1; i >= 0; i-- ) {
+		if (i == _scanRow) {
+			// shift out row bit
+			shiftOutBit(LOW);
+		}
+		else {
+			shiftOutBit(HIGH);
+		}
+	}
+
 	digitalWrite(_latchPin, HIGH);
 
 	_scanRow++;
