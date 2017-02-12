@@ -35,8 +35,16 @@ private:
   int _scanRow;
   boolean _drawingActive;
   
+  volatile uint8_t *_sclkPort;
+  volatile uint8_t *_mosiPort;
+  uint8_t _sclkMask;
+  uint8_t _mosiMask;
+  
+  // fast writing of a bit to the shift register by directly manipulating pin state
   void shiftOutBit( uint8_t bitValue );
-
+  
+  // safe writing of a bit to the shift register by using standard arduino calls
+  void writeOutBit( uint8_t bitValue );
 protected:
   virtual void action();
 public:

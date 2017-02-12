@@ -38,15 +38,39 @@ Screen::Screen(
 	pinMode(latchPin, OUTPUT);
 	pinMode(clockPin, OUTPUT);
 	pinMode(dataPin, OUTPUT);
-	pinMode(LED_BUILTIN, OUTPUT);
+
+  _sclkPort = portOutputRegister(digitalPinToPort(clockPin));
+  _mosiPort = portOutputRegister(digitalPinToPort(dataPin));
+  _sclkMask = digitalPinToBitMask(clockPin);
+  _mosiMask = digitalPinToBitMask(dataPin);
 }
 
 void Screen::shiftOutBit( uint8_t bitValue ) {
+  	// fast writing of a bit to the shift register by directly manipulating pin state
+	uint8_t oldSREG = SREG;
+	cli();
+	*_sclkPort &= ~_sclkMask;		// clock LOW
+	if ( bitValue == HIGH ) {
+		*_mosiPort |= _mosiMask;	// data HIGH
+	} else {
+		*_mosiPort &= ~_mosiMask;	// DATA LOW
+	}
+	*_sclkPort |= _sclkMask;		// clock HIGH
+	*_mosiPort &= ~_mosiMask;		// DATA LOW
+	*_sclkPort &= ~_sclkMask;		// clock LOW
+	
+	SREG = oldSREG;
+	sei();
+}
+
+void Screen::writeOutBit( uint8_t bitValue ) {
+  	// safe writing of a bit to the shift register by using standard arduino calls
+  	// to use this version, change the code in action()
 	digitalWrite(_clockPin, LOW);
 	digitalWrite(_dataPin, bitValue);
 	digitalWrite(_clockPin, HIGH);
+	digitalWrite(_dataPin, LOW);
 }
-
 void Screen::action() {    
 	digitalWrite(_latchPin, LOW);
 
