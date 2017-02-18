@@ -15,6 +15,7 @@
 // 
 //     You should have received a copy of the GNU General Public License
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
+#include <Arduino.h>
 #include <string.h>
 #include "RGBImage.h"
 
@@ -77,4 +78,66 @@ void RGBImage::placeImageAt( const RGBImage& image, int row, int column ) {
 
 void RGBImage::paintColor( ColorType color ) {
 	memset(_data,color,_rows*_columns);
+}
+
+void RGBImage::drawLine( 
+	int startRow,
+	int startColumn,
+	int stopRow,
+	int stopColumn,
+	ColorType color )
+{
+	if ( stopColumn != startColumn ) {
+		float delta_row = stopRow - startRow;
+		float delta_col = stopColumn - startColumn;
+		float delta_err = abs(delta_row/delta_col);
+		float error = delta_err - 0.5;
+		
+		int row = startRow;
+		for (int col = startColumn; 
+			delta_col < 0 ? col >= stopColumn : col <= stopColumn; 
+			delta_col < 0 ? col-- : col++ ) 
+		{
+			this->pixel(row,col) = color;
+			error = error + delta_err;
+			if (error >= 0.5) {
+				row += delta_row < 0 ? -1 : 1;
+				error -= 1.0;
+			}
+		}
+	}
+	else {
+		float delta_row = stopRow - startRow;
+
+		for ( int row = startRow; 
+			  delta_row < 0 ? row >= stopRow : row <= stopRow; 
+			  delta_row < 0 ? row-- : row++ ) 
+		{
+			this->pixel(row,startColumn) = color;
+		}	
+	}
+}	
+
+void RGBImage::drawRectangle( 
+  		int tlRow,
+  		int tlColumn,
+  		int brRow,
+  		int brColumn,
+  		ColorType color,
+  		bool fill
+  	)
+{
+	if ( tlRow > brRow || tlColumn > brColumn ) {
+		return;
+	}
+	
+	for (int row = tlRow; row <= brRow; row++ ) {
+		if ( fill || row == tlRow || row == brRow ) {
+			memset(&this->pixel(row,tlColumn),color,brColumn-tlColumn+1);
+		}
+		else {
+			this->pixel(row,tlColumn) = color;
+			this->pixel(row,brColumn) = color;
+		}
+	}
 }

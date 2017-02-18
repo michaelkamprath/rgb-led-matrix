@@ -35,6 +35,8 @@ Screen::Screen(
 		_screen_buf(rows,columns)
 {
 	_scanPass = 1;
+	_scanRow = 0;
+	_priorRow = rows-1;
 	pinMode(latchPin, OUTPUT);
 	pinMode(clockPin, OUTPUT);
 	pinMode(dataPin, OUTPUT);
@@ -47,8 +49,6 @@ Screen::Screen(
 
 void Screen::shiftOutBit( uint8_t bitValue ) {
   	// fast writing of a bit to the shift register by directly manipulating pin state
-	uint8_t oldSREG = SREG;
-	cli();
 	*_sclkPort &= ~_sclkMask;		// clock LOW
 	if ( bitValue == HIGH ) {
 		*_mosiPort |= _mosiMask;	// data HIGH
@@ -56,11 +56,6 @@ void Screen::shiftOutBit( uint8_t bitValue ) {
 		*_mosiPort &= ~_mosiMask;	// DATA LOW
 	}
 	*_sclkPort |= _sclkMask;		// clock HIGH
-	*_mosiPort &= ~_mosiMask;		// DATA LOW
-	*_sclkPort &= ~_sclkMask;		// clock LOW
-	
-	SREG = oldSREG;
-	sei();
 }
 
 void Screen::writeOutBit( uint8_t bitValue ) {
@@ -69,7 +64,26 @@ void Screen::writeOutBit( uint8_t bitValue ) {
 	digitalWrite(_clockPin, LOW);
 	digitalWrite(_dataPin, bitValue);
 	digitalWrite(_clockPin, HIGH);
-	digitalWrite(_dataPin, LOW);
+}
+
+#define MAX_SCAN_PASS_COUNT 9
+int Screen::maxScanCountForValue(unsigned char value) {
+	switch (value) {
+		case 0:
+			return 0;
+			break;
+		case 1:
+			return 1;
+			break;
+		case 2:
+			return 3;
+			break;
+		case 3:
+		default:
+			return MAX_SCAN_PASS_COUNT;
+			break;
+	}
+
 }
 void Screen::action() {    
 	digitalWrite(_latchPin, LOW);
@@ -79,23 +93,29 @@ void Screen::action() {
 	if (_scanRow == 0 && _scanPass == 1 && !_drawingActive) {
 		_screen_data.copy(_screen_buf);
 	}
-	// first, turn everything off to account for slow switching transistors on the rows 
-	// and slow 74HC595 that may "leak" some power into the last turned off row by still 
-	// be partially on when the new row turn on.
 	
-    for (int i = 0; i < _columns; i++) {
-        shiftOutBit(HIGH); // red
-        shiftOutBit(HIGH); // green
-        shiftOutBit(HIGH); // blue
-    }
-	for (int i = _rows - 1; i >= 0; i-- ) {
-		shiftOutBit(HIGH);
+	uint8_t oldSREG = SREG;
+	cli();
+	if (_scanRow == 0) {
+		// before scanning the first row, turn off the prior row completely. The prior row
+		// would be the bottom row on the matrix. If the switching transistor is slow,
+		// it would still be partially on when the first row is turned on causing the LEDs
+		// to glow slightly since the electrical path to the transistor transitioning off 
+		// shorter (less resistance)
+		
+		for (int i = 0; i < _columns; i++) {
+			shiftOutBit(HIGH); // red
+			shiftOutBit(HIGH); // green
+			shiftOutBit(HIGH); // blue
+		}
+		for (int i = _rows - 1; i >= 0; i-- ) {
+			shiftOutBit(HIGH);
+		}
+		digitalWrite(_latchPin, HIGH);
+		digitalWrite(_latchPin, LOW);	
 	}
-	
-	digitalWrite(_latchPin, HIGH);
-	digitalWrite(_latchPin, LOW);
-
-
+		
+	bool rowNeedsPower = false;
 	for (int col = 0; col < _columns; col++) {
 		short rgbValue = _screen_data.pixel(_scanRow,col);
 
@@ -104,8 +124,9 @@ void Screen::action() {
 		
 		// red
 		short redValue = (rgbValue & RED_MASK)>>RED_BIT_SHIFT;
-		if (redValue && _scanPass <= redValue*redValue ) {
+		if (redValue && _scanPass <= Screen::maxScanCountForValue(redValue) ) {
 			shiftOutBit(LOW);
+			rowNeedsPower = true;
 		}
 		else {
 			shiftOutBit(HIGH);
@@ -113,8 +134,9 @@ void Screen::action() {
 
 		// green
 		short greenValue = (rgbValue & GREEN_MASK)>>GREEN_BIT_SHIFT;
-		if (greenValue && _scanPass <= greenValue*greenValue ) {
+		if (greenValue && _scanPass <= Screen::maxScanCountForValue(greenValue) ) {
 			shiftOutBit(LOW);
+			rowNeedsPower = true;
 		}
 		else {
 			shiftOutBit(HIGH);
@@ -122,17 +144,17 @@ void Screen::action() {
 
 		// blue
 		short blueValue = (rgbValue & BLUE_MASK)>>BLUE_BIT_SHIFT;
-		if (blueValue && _scanPass <= blueValue*blueValue ) {
+		if (blueValue && _scanPass <= Screen::maxScanCountForValue(blueValue) ) {
 			shiftOutBit(LOW);
+			rowNeedsPower = true;
 		}
 		else {
 			shiftOutBit(HIGH);
 		}
 	}
-	
 		// now write out the row bits
 	for (int i = _rows - 1; i >= 0; i-- ) {
-		if (i == _scanRow) {
+		if (i == _scanRow && rowNeedsPower) {
 			// shift out row bit
 			shiftOutBit(LOW);
 		}
@@ -140,14 +162,17 @@ void Screen::action() {
 			shiftOutBit(HIGH);
 		}
 	}
+	SREG = oldSREG;
+	sei();
 
 	digitalWrite(_latchPin, HIGH);
 
+	_priorRow = _scanRow;
 	_scanRow++;
 	if (_scanRow >= _rows) {
 		_scanRow = 0;
 		_scanPass++;
-		if (_scanPass >= 9) {
+		if (_scanPass >= MAX_SCAN_PASS_COUNT) {
 			_scanPass = 1;
 		}
 	}

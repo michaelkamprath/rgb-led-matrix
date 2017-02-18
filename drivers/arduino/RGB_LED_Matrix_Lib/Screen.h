@@ -33,12 +33,15 @@ private:
 
   int _scanPass;
   int _scanRow;
+  int _priorRow;
   boolean _drawingActive;
   
   volatile uint8_t *_sclkPort;
   volatile uint8_t *_mosiPort;
   uint8_t _sclkMask;
   uint8_t _mosiMask;
+  
+  static int maxScanCountForValue(unsigned char value);
   
   // fast writing of a bit to the shift register by directly manipulating pin state
   void shiftOutBit( uint8_t bitValue );
@@ -66,7 +69,19 @@ public:
   void paintColor( byte color ) {
     _screen_buf.paintColor(color);
   }
-  
+  void drawLine( int startRow, int startColumn, int stopRow, int stopColumn, ColorType color ) {
+  	_screen_buf.drawLine(startRow, startColumn, stopRow, stopColumn, color);
+  }
+  void drawRectangle( 
+  		int tlRow,
+  		int tlColumn,
+  		int brRow,
+  		int brColumn,
+  		ColorType color,
+  		bool fill = true
+  )  {
+  	_screen_buf.drawRectangle( tlRow, tlColumn, brRow, brColumn, color, fill );
+  }
   void startDrawing(void)   { _drawingActive = true; }
   void stopDrawing(void)    { _drawingActive = false; }
   

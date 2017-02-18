@@ -78,6 +78,15 @@ public:
   const ColorType& pixel( int row, int column ) const;
   void placeImageAt( const RGBImage& image, int row, int column );
   void paintColor( ColorType color ); 
+  void drawLine( int startRow, int startColumn, int stopRow, int stopColumn, ColorType color );
+  void drawRectangle( 
+  		int tlRow,
+  		int tlColumn,
+  		int brRow,
+  		int brColumn,
+  		ColorType color,
+  		bool fill = true
+  	);
 };
 
 #endif //__RGBIMAGE_H__
