@@ -88,22 +88,27 @@ void RGBImage::drawLine(
 	ColorType color )
 {
 	if ( stopColumn != startColumn ) {
-		float delta_row = stopRow - startRow;
 		float delta_col = stopColumn - startColumn;
-		float delta_err = abs(delta_row/delta_col);
-		float error = delta_err - 0.5;
+		float delta_row = stopRow - startRow;
 		
-		int row = startRow;
-		for (int col = startColumn; 
-			delta_col < 0 ? col >= stopColumn : col <= stopColumn; 
-			delta_col < 0 ? col-- : col++ ) 
-		{
-			this->pixel(row,col) = color;
-			error = error + delta_err;
-			if (error >= 0.5) {
-				row += delta_row < 0 ? -1 : 1;
-				error -= 1.0;
+		if (abs(delta_col) > abs(delta_row)) {
+			for (int col = startColumn; 
+				delta_col < 0 ? col >= stopColumn : col <= stopColumn; 
+				delta_col < 0 ? col-- : col++ ) 
+			{
+				int row = round(startRow + delta_row*(col - startColumn)/delta_col);
+				this->pixel(row,col) = color;
 			}
+		}
+		else {
+			for (int row = startRow; 
+				delta_row < 0 ? row >= stopRow : row <= stopRow; 
+				delta_row < 0 ? row-- : row++ ) 
+			{
+				int col = round(startColumn + delta_col*(row - startRow)/delta_row);
+				this->pixel(row,col) = color;
+			}
+		
 		}
 	}
 	else {
