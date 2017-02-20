@@ -27,6 +27,18 @@ RGBImage::RGBImage(int rows, int columns)
 	this->paintColor(BLACK_COLOR);
 }
 
+RGBImage::RGBImage(const RGBImage& other)
+:	_rows(other._rows),
+	_columns(other._columns),
+	_data(new ColorType[other._rows*other._columns])
+{
+	this->copy(other);
+}
+
+RGBImage::~RGBImage() {
+	delete _data;
+}
+
 void RGBImage::copy(const RGBImage& other) {
 	// only copy if same dimensions
 	if (other._rows == _rows && other._columns == _columns) {
@@ -71,8 +83,13 @@ void RGBImage::placeImageAt( const RGBImage& image, int row, int column ) {
 		startRow = 0;
 	}
 
-	for ( int yT = startRow, yO = imageY; (yT < this->_rows) && (yO < image._rows); yT++, yO++ ) {     
-		memcpy(&this->pixel(yT,thisX), &image.pixel(yO,imageX), imageColumns);
+	for ( int yT = startRow, yO = imageY; (yT < this->_rows) && (yO < image._rows); yT++, yO++ ) { 
+		for (int colCounter = 0; colCounter < imageColumns; colCounter++) {
+			ColorType color = image.pixel(yO,imageX+colCounter);
+			if (color != TRANSPARENT_COLOR) {
+				this->pixel(yT,thisX+colCounter) = color;
+			}
+		}
 	}
 }
 
@@ -81,11 +98,12 @@ void RGBImage::paintColor( ColorType color ) {
 }
 
 void RGBImage::drawLine( 
-	int startRow,
-	int startColumn,
-	int stopRow,
-	int stopColumn,
-	ColorType color )
+		int startRow,
+		int startColumn,
+		int stopRow,
+		int stopColumn,
+		ColorType color
+	)
 {
 	if ( stopColumn != startColumn ) {
 		float delta_col = stopColumn - startColumn;

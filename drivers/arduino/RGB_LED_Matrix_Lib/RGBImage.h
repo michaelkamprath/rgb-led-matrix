@@ -25,8 +25,9 @@ The bits of the byte are laid out as follows:
 
 	Bits   0   4
 		   |---|---
-		   UURRGGBB
+		   TURRGGBB
 
+	T = transparent
 	U = unused
 	R = Red
 	G = Green
@@ -36,6 +37,7 @@ The bits of the byte are laid out as follows:
 
 typedef unsigned char ColorType;
 
+const ColorType TRANSPARENT_COLOR = B10000000;
 const ColorType WHITE_COLOR = 0x3F;
 const ColorType GRAY_COLOR = 0x2A;
 const ColorType DARK_GRAY_COLOR = 0x15;
@@ -65,28 +67,36 @@ const static unsigned char BLUE_BIT_SHIFT = 0;
 
 class RGBImage {
 private:
-  int _rows;
-  int _columns;
-  ColorType* _data;
+	int _rows;
+	int _columns;
+	ColorType* _data;
 
 public:
-  RGBImage(int rows, int columns);
+	RGBImage(int rows, int columns);
+	RGBImage(const RGBImage& other);
+	virtual ~RGBImage();
 
-  void copy(const RGBImage& other);
-  
-  ColorType& pixel( int row, int column );
-  const ColorType& pixel( int row, int column ) const;
-  void placeImageAt( const RGBImage& image, int row, int column );
-  void paintColor( ColorType color ); 
-  void drawLine( int startRow, int startColumn, int stopRow, int stopColumn, ColorType color );
-  void drawRectangle( 
-  		int tlRow,
-  		int tlColumn,
-  		int brRow,
-  		int brColumn,
-  		ColorType color,
-  		bool fill = true
-  	);
+	void copy(const RGBImage& other);
+
+	ColorType& pixel( int row, int column );
+	const ColorType& pixel( int row, int column ) const;
+	void placeImageAt( const RGBImage& image, int row, int column );
+	void paintColor( ColorType color ); 
+	void drawLine(
+		int startRow,
+		int startColumn,
+		int stopRow,
+		int stopColumn,
+		ColorType color
+	);
+	void drawRectangle( 
+		int tlRow,
+		int tlColumn,
+		int brRow,
+		int brColumn,
+		ColorType color,
+		bool fill = true
+	);
 };
 
 #endif //__RGBIMAGE_H__
