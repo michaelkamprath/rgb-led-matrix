@@ -96,7 +96,6 @@ void Screen::action() {
 	
 	uint8_t oldSREG = SREG;
 	cli();
-//	if (false) {
 	if (_scanRow == 0) {
 		// before scanning the first row, turn off the prior row completely. The prior row
 		// would be the bottom row on the matrix. If the switching transistor is slow,

@@ -1,7 +1,11 @@
 /***
  * Space Invaders Animation Sequence
  * 
- * This animations was heavily inspired by: https://learn.adafruit.com/trinket-slash-gemma-space-invader-pendant/animation
+ * Cyclces through the classic images of attacking aliens.
+ * 
+ * This animations was heavily inspired by: 
+ *     https://learn.adafruit.com/trinket-slash-gemma-space-invader-pendant/animation
+ * 
  */
 
 
@@ -45,7 +49,7 @@ unsigned char invader1B[8] = {
 
 
 unsigned char invader2A[8] = {
-  B00000000, // First frame for alien #2
+  B00000000,
   B00111100,
   B01111110,
   B11011011,
@@ -56,7 +60,7 @@ unsigned char invader2A[8] = {
   };
 
 unsigned char invader2B[8] = {
-  B00111100, // Second frame for alien #2
+  B00111100,
   B01111110,
   B11011011,
   B11011011,
@@ -67,7 +71,7 @@ unsigned char invader2B[8] = {
   };
 
 unsigned char invader3A[8] = {
-  B00100100, // First frame for alien #3
+  B00100100,
   B00100100,
   B01111110,
   B11011011,
@@ -78,7 +82,7 @@ unsigned char invader3A[8] = {
 };
 
 unsigned char invader3B[8] = {
-  B00100100, // Second frame for alien #3
+  B00100100,
   B10100101,
   B11111111,
   B11011011,
@@ -89,7 +93,7 @@ unsigned char invader3B[8] = {
 };
 
 unsigned char invader4A[8] = {
-  B00111100, // First frame for alien #4
+  B00111100,
   B01111110,
   B00110011,
   B01111110,
@@ -100,7 +104,7 @@ unsigned char invader4A[8] = {
 };
  
 unsigned char invader4B[8] = {
-  B00111100, // Second frame for alien #4
+  B00111100,
   B01111110,
   B10011001,
   B01111110,
@@ -111,7 +115,7 @@ unsigned char invader4B[8] = {
 };
  
 unsigned char invader4C[8] = {
-  B00111100, // Third frame for alien #4 (NOT a repeat of frame 1)
+  B00111100,
   B01111110,
   B11001100,
   B01111110,
@@ -122,7 +126,7 @@ unsigned char invader4C[8] = {
 };
  
 unsigned char invader4D[8] = {
-  B00111100, // Fourth frame for alien #4 (NOT a repeat of frame 2)
+  B00111100,
   B01111110,
   B01100110,
   B01111110,
