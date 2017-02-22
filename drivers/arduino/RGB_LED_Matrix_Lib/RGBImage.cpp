@@ -18,6 +18,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include "RGBImage.h"
+#include "Glyph.h"
 
 RGBImage::RGBImage(int rows, int columns)
 :	_rows(rows),
@@ -94,7 +95,7 @@ void RGBImage::placeImageAt( const RGBImage& image, int row, int column ) {
 }
 
 void RGBImage::paintColor( ColorType color ) {
-	memset(_data,color,_rows*_columns);
+	memset(_data,color,this->rows()*this->columns());
 }
 
 void RGBImage::drawLine( 
@@ -161,6 +162,58 @@ void RGBImage::drawRectangle(
 		else {
 			this->pixel(row,tlColumn) = color;
 			this->pixel(row,brColumn) = color;
+		}
+	}
+}
+
+void RGBImage::drawGlyph(
+		const Glyph& glyph,
+		int row,
+		int column,
+		ColorType foreground,
+		ColorType background
+	)
+{
+	if (	row >= this->_rows
+			|| column >= this->_columns
+			|| (glyph.columns() + column <= 0 )
+			|| (glyph.rows() + row <= 0) 
+		) {
+		return;
+	}
+
+	int imageX = 0;
+	int thisX = column;
+	if (column < 0) {
+		imageX = -column;
+		thisX = 0;
+	}
+	
+	int imageColumns = glyph.columns() - imageX;
+	int thisColumns = column <= 0 ? this->_columns : this->_columns - column;
+	if (imageColumns > thisColumns) {
+		imageColumns = thisColumns;
+	}
+
+	int imageY = 0;
+	int startRow = row;
+	if (row < 0) {
+		imageY = -row;
+		startRow = 0;
+	}
+
+	for (	
+			int yT = startRow, yGlyph = imageY;
+			(yT < this->rows()) && (yGlyph < glyph.rows()); 
+			yT++, yGlyph++ 
+		) { 
+		for (int colCounter = 0; colCounter < imageColumns; colCounter++) {
+			if (glyph.getBit(yGlyph,imageX+colCounter)) {
+				this->pixel(yT,thisX+colCounter) = foreground;
+			}
+			else if ( background != TRANSPARENT_COLOR ) {
+				this->pixel(yT,thisX+colCounter) = background;
+			}
 		}
 	}
 }

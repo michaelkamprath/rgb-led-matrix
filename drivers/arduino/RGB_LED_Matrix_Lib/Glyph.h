@@ -18,7 +18,6 @@
 
 #ifndef __GLYPH_H__
 #define __GLYPH_H__
-#include "RGBImage.h"
 
 /***
  * Glyph
@@ -35,30 +34,20 @@ private:
 	int _rows;
 	int _columns;
 	unsigned char* _data;
-
-
-	void setBit( int row, int column );
-	void clearBit( int row, int column );
-	bool getBit( int row, int column ) const;
+	bool _manageData;
+	
 public:
 
 	Glyph( int rows, int columns, unsigned char* data = NULL );
 	Glyph( const Glyph& other );
 	virtual ~Glyph();
 	
-	RGBImage* getImageWithColor(
-			ColorType foreground,
-			ColorType background = BLACK_COLOR
-		) const;
+	int rows(void) const		{ return _rows; }
+	int columns(void) const		{ return _columns; }
 
-
-	static Glyph* clipBitArray(
-			int desiredRows,
-			int desiredColumns,
-			int providedRows,
-			int providedColumns,
-			unsigned char* providedData
-		);	
+	void setBit( int row, int column );
+	void clearBit( int row, int column );
+	bool getBit( int row, int column ) const;
 };
  
 

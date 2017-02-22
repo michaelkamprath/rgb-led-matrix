@@ -14,17 +14,6 @@
 #include <Screen.h>
 #include <TimerAction.h>
 
-unsigned char heartBits[8] = {
-    B01000100,
-    B11101110,
-    B11111110,
-    B11000110,
-    B01101100,
-    B00111000,
-    B00010000,
-    B00000000
-  };
-
 unsigned char invader1A[8] = {
     B00011000, 
     B00111100,
@@ -136,95 +125,83 @@ unsigned char invader4D[8] = {
   B00000000,
 };
 
-const int SEQUENCE_COUNT = 42;
+const int SEQUENCE_COUNT = 27;
 Screen leds(8,8);
-RGBImage* imageSequence[SEQUENCE_COUNT];
+Glyph* imageSequence[SEQUENCE_COUNT];
+ColorType imageColors[SEQUENCE_COUNT];
+unsigned long imageTime[SEQUENCE_COUNT];
 unsigned long counter = 0;
 int sequenceIdx = 0;
 
 void setup() {
-  Glyph a1a(8,8,invader1A);
-  Glyph a1b(8,8,invader1B);
-  Glyph a2a(8,8,invader2A);
-  Glyph a2b(8,8,invader2B);
-  Glyph a3a(8,8,invader3A);
-  Glyph a3b(8,8,invader3B);
-  Glyph a4a(8,8,invader4A);
-  Glyph a4b(8,8,invader4B);
-  Glyph a4c(8,8,invader4C);
-  Glyph a4d(8,8,invader4D);
+  Glyph* a1a = new Glyph(8,8,invader1A);
+  Glyph* a1b = new Glyph(8,8,invader1B);
+  Glyph* a2a = new Glyph(8,8,invader2A);
+  Glyph* a2b = new Glyph(8,8,invader2B);
+  Glyph* a3a = new Glyph(8,8,invader3A);
+  Glyph* a3b = new Glyph(8,8,invader3B);
+  Glyph* a4a = new Glyph(8,8,invader4A);
+  Glyph* a4b = new Glyph(8,8,invader4B);
+  Glyph* a4c = new Glyph(8,8,invader4C);
+  Glyph* a4d = new Glyph(8,8,invader4D);
  
-  RGBImage* img1a = a1a.getImageWithColor( B00001000, TRANSPARENT_COLOR );
-  RGBImage* img1b = a1b.getImageWithColor( B00001000, TRANSPARENT_COLOR );
-  RGBImage* img2a = a2a.getImageWithColor( B00100000, TRANSPARENT_COLOR );
-  RGBImage* img2b = a2b.getImageWithColor( B00100000, TRANSPARENT_COLOR );
-  RGBImage* img3a = a3a.getImageWithColor( B00100100, TRANSPARENT_COLOR );
-  RGBImage* img3b = a3b.getImageWithColor( B00100100, TRANSPARENT_COLOR );
-  RGBImage* img4a = a4a.getImageWithColor( B00000010, TRANSPARENT_COLOR );
-  RGBImage* img4b = a4b.getImageWithColor( B00000010, TRANSPARENT_COLOR );
-  RGBImage* img4c = a4c.getImageWithColor( B00000010, TRANSPARENT_COLOR );
-  RGBImage* img4d = a4d.getImageWithColor( B00000010, TRANSPARENT_COLOR );
+  memset(&imageColors[0], B00001000, 5);
+  memset(&imageColors[5], B00100000, 5);
+  memset(&imageColors[10], B00100100, 5);
+  memset(&imageColors[15], B00000010, 12);
 
-  imageSequence[0] = img1a;
-  imageSequence[1] = img1a;
-  imageSequence[2] = img1b;
-  imageSequence[3] = img1b;
-  imageSequence[4] = img1a;
-  imageSequence[5] = img1a;
-  imageSequence[6] = img1b;
-  imageSequence[7] = img1b;
-  imageSequence[8] = img1a;
-  imageSequence[9] = img1a;
-  imageSequence[10] = img2a;
-  imageSequence[11] = img2a;
-  imageSequence[12] = img2b;
-  imageSequence[13] = img2b;
-  imageSequence[14] = img2a;
-  imageSequence[15] = img2a;
-  imageSequence[16] = img2b;
-  imageSequence[17] = img2b;
-  imageSequence[18] = img2a;
-  imageSequence[19] = img2a;
-  imageSequence[20] = img3a;
-  imageSequence[21] = img3a;
-  imageSequence[22] = img3b;
-  imageSequence[23] = img3b;
-  imageSequence[24] = img3a;
-  imageSequence[25] = img3a;
-  imageSequence[26] = img3b;
-  imageSequence[27] = img3b;
-  imageSequence[28] = img3a;
-  imageSequence[29] = img3a;
-  imageSequence[30] = img4a;
-  imageSequence[31] = img4b;
-  imageSequence[32] = img4c;
-  imageSequence[33] = img4d;
-  imageSequence[34] = img4a;
-  imageSequence[35] = img4b;
-  imageSequence[36] = img4c;
-  imageSequence[37] = img4d;
-  imageSequence[38] = img4a;
-  imageSequence[39] = img4b;
-  imageSequence[40] = img4c;
-  imageSequence[41] = img4d;
- 
-  leds.paintColor(BLACK_COLOR);
-  leds.placeImageAt( *img1a, 0, 0 );
+  for (int i = 0; i < 15; i++ ) {
+    imageTime[i] = 2000;
+  }
+  for (int i = 15; i < SEQUENCE_COUNT; i++ ) {
+    imageTime[i] = 1000;
+  }
+  
+  imageSequence[0] = a1a;
+  imageSequence[1] = a1b;
+  imageSequence[2] = a1a;
+  imageSequence[3] = a1b;
+  imageSequence[4] = a1a;
+  imageSequence[5] = a2a;
+  imageSequence[6] = a2b;
+  imageSequence[7] = a2a;
+  imageSequence[8] = a2b;
+  imageSequence[9] = a2a;
+  imageSequence[10] = a3a;
+  imageSequence[11] = a3b;
+  imageSequence[12] = a3a;
+  imageSequence[13] = a3b;
+  imageSequence[14] = a3a;
+  imageSequence[15] = a4a;
+  imageSequence[16] = a4b;
+  imageSequence[17] = a4c;
+  imageSequence[18] = a4d;
+  imageSequence[19] = a4a;
+  imageSequence[20] = a4b;
+  imageSequence[21] = a4c;
+  imageSequence[22] = a4d;
+  imageSequence[23] = a4a;
+  imageSequence[24] = a4b;
+  imageSequence[25] = a4c;
+  imageSequence[26] = a4d;
 }
 
-void loop() {
+
+void loop() {  
   // put your main code here, to run repeatedly:
   leds.loop();
   counter++;
-  if (counter%750 == 0) {
+  if (counter%imageTime[sequenceIdx] == 0) {
     sequenceIdx++;
     if (sequenceIdx >= SEQUENCE_COUNT) {
       sequenceIdx = 0;
     }
 
-    leds.paintColor(BLACK_COLOR);
-    leds.placeImageAt(*imageSequence[sequenceIdx], 0, 0);
-
+    leds.startDrawing();
+    leds.drawGlyph( *imageSequence[sequenceIdx], 0,0, imageColors[sequenceIdx], BLACK_COLOR );
+    leds.stopDrawing();
+    
     counter = 0;
   }
 }
+

@@ -34,6 +34,7 @@ The bits of the byte are laid out as follows:
 	B = Blue
 
 */
+class Glyph;
 
 typedef unsigned char ColorType;
 
@@ -76,6 +77,9 @@ public:
 	RGBImage(const RGBImage& other);
 	virtual ~RGBImage();
 
+	int rows(void) const		{ return _rows; }
+	int columns(void) const		{ return _columns; }
+
 	void copy(const RGBImage& other);
 
 	ColorType& pixel( int row, int column );
@@ -97,6 +101,14 @@ public:
 		ColorType color,
 		bool fill = true
 	);
+	
+	void drawGlyph(
+			const Glyph& image,
+			int row,
+			int column,
+			ColorType foreground,
+			ColorType background = TRANSPARENT_COLOR
+		);
 };
 
 #endif //__RGBIMAGE_H__

@@ -53,40 +53,52 @@ protected:
 public:
   
 
-  Screen( int rows,
-          int columns,
-          int latchPin = 5,
-          int clockPin = 6,
-          int dataPin  = 7
-        );
+	Screen( int rows,
+		  int columns,
+		  int latchPin = 5,
+		  int clockPin = 6,
+		  int dataPin  = 7
+		);
 
-  byte& pixel( int row, int column ) {
-    return _screen_buf.pixel(row,column);
-  }
-  void placeImageAt( const RGBImage& image, int row, int column ) {
-    _screen_buf.placeImageAt(image, row, column);
-  }
-  void paintColor( byte color ) {
-    _screen_buf.paintColor(color);
-  }
-  void drawLine( int startRow, int startColumn, int stopRow, int stopColumn, ColorType color ) {
-  	_screen_buf.drawLine(startRow, startColumn, stopRow, stopColumn, color);
-  }
-  void drawRectangle( 
-  		int tlRow,
-  		int tlColumn,
-  		int brRow,
-  		int brColumn,
-  		ColorType color,
-  		bool fill = true
-  )  {
-  	_screen_buf.drawRectangle( tlRow, tlColumn, brRow, brColumn, color, fill );
-  }
+	byte& pixel( int row, int column ) {
+		return _screen_buf.pixel(row,column);
+	}
+	void placeImageAt( const RGBImage& image, int row, int column ) {
+		_screen_buf.placeImageAt(image, row, column);
+	}
+	void paintColor( byte color ) {
+		_screen_buf.paintColor(color);
+	}
+	void drawLine( int startRow, int startColumn, int stopRow, int stopColumn, ColorType color ) {
+		_screen_buf.drawLine(startRow, startColumn, stopRow, stopColumn, color);
+	}
+	void drawRectangle( 
+			int tlRow,
+			int tlColumn,
+			int brRow,
+			int brColumn,
+			ColorType color,
+			bool fill = true
+		)  {
+		_screen_buf.drawRectangle( tlRow, tlColumn, brRow, brColumn, color, fill );
+	}
+  
+	void drawGlyph(
+			const Glyph& image,
+			int row,
+			int column,
+			ColorType foreground,
+			ColorType background = TRANSPARENT_COLOR
+		) {
+		_screen_buf.drawGlyph( image, row, column, foreground, background );
+	}
+  
+  
   void startDrawing(void)   { _drawingActive = true; }
   void stopDrawing(void)    { _drawingActive = false; }
   
-  int rows()                { return _rows; }
-  int columns()             { return _columns; }
+  int rows() const          { return _rows; }
+  int columns() const       { return _columns; }
   
 };
 
