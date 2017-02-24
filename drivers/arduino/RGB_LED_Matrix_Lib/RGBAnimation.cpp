@@ -127,4 +127,44 @@ int GlyphSequenceAnimation::columns() const
 	return _frameArray[0].glyph->columns();
 }
 
+#pragma mark - ImageSequenceAnimation
+
+ImageSequenceAnimation::ImageSequenceAnimation(
+			RGBLEDMatrix& matrix,
+			const ImageSequenceAnimation::Frame* frameArray,
+			int	frameArraySize
+	) :	RGBAnimationBase(1000,matrix,frameArraySize),
+		_frameArray(frameArray),
+		_frameArraySize(frameArraySize),
+		_lastDrawnSequenceIdx( 0 )
+{
+}
+		
+
+void ImageSequenceAnimation::draw( RGBImage& buffer)
+{
+	int idx = this->getSequenceIndex();
+
+	buffer.placeImageAt(
+		*_frameArray[idx].image,
+		this->getOriginRow(),
+		this->getOriginColumn()
+	);
+
+	// this function may be called multiple times in a given interval. Only
+	// 
+	if ( idx != _lastDrawnSequenceIdx ) {
+		this->setIntervalMillis(_frameArray[idx].interval);
+	}
+	_lastDrawnSequenceIdx = idx;
+}
+
+int ImageSequenceAnimation::rows() const
+{
+	return _frameArray[0].image->rows();
+}
+int ImageSequenceAnimation::columns() const
+{
+	return _frameArray[0].image->columns();
+}
 

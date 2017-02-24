@@ -23,6 +23,7 @@
 
 class Glyph;
 class RGBLEDMatrix;
+class RGBImage;
 
 class RGBAnimationBase : public TimerAction {
 
@@ -109,5 +110,33 @@ public:
 	virtual int rows() const;
 	virtual int columns() const;
 };
+
+class ImageSequenceAnimation : public RGBAnimationBase {
+public:
+	struct Frame {
+		const RGBImage* image;
+		unsigned long interval;
+	};
+
+private:
+	const Frame* _frameArray;
+	const int _frameArraySize;
+	int _lastDrawnSequenceIdx;
+		
+protected:
+	virtual void draw( RGBImage& buffer);
+
+public:
+
+	ImageSequenceAnimation(
+			RGBLEDMatrix& matrix,
+			const ImageSequenceAnimation::Frame* frameArray,
+			int	frameArraySize
+	);
+
+	virtual int rows() const;
+	virtual int columns() const;
+};
+
 
 #endif

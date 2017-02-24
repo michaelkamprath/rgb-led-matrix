@@ -4,6 +4,7 @@ RGBLEDMatrix		KEYWORD1
 TimerAction			KEYWORD1
 Glyph				KEYWORD1
 RGBAnimationBase	KEYWORD1
+ImageSequenceAnimation	KEYWORD1
 GlyphSequenceAnimation	KEYWORD1
 RGBAnimationSequence	KEYWORD1
 

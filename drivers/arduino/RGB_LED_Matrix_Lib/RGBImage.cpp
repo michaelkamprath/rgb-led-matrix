@@ -28,6 +28,14 @@ RGBImage::RGBImage(int rows, int columns)
 	this->paintColor(BLACK_COLOR);
 }
 
+RGBImage::RGBImage(int rows, int columns, ColorType* data )
+:	_rows(rows),
+	_columns(columns),
+	_data(new ColorType[rows*columns])
+{
+	memcpy(_data, data, rows*columns);
+}
+
 RGBImage::RGBImage(const RGBImage& other)
 :	_rows(other._rows),
 	_columns(other._columns),

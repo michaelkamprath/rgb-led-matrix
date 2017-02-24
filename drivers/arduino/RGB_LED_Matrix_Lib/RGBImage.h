@@ -74,6 +74,7 @@ private:
 
 public:
 	RGBImage(int rows, int columns);
+	RGBImage(int rows, int columns, ColorType* data );
 	RGBImage(const RGBImage& other);
 	virtual ~RGBImage();
 
