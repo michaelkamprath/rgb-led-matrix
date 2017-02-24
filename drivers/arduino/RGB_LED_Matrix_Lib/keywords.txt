@@ -1,8 +1,11 @@
 RGBImage			KEYWORD1
 ColorType			KEYWORD1
-Screen				KEYWORD1
+RGBLEDMatrix		KEYWORD1
 TimerAction			KEYWORD1
 Glyph				KEYWORD1
+RGBAnimationBase	KEYWORD1
+GlyphSequenceAnimation	KEYWORD1
+RGBAnimationSequence	KEYWORD1
 
 WHITE_COLOR			LITERAL1
 GRAY_COLOR			LITERAL1

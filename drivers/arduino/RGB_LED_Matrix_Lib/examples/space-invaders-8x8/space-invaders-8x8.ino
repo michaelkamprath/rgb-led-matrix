@@ -11,8 +11,10 @@
 
 #include <Glyph.h>
 #include <RGBImage.h>
-#include <Screen.h>
+#include <RGBLEDMatrix.h>
 #include <TimerAction.h>
+#include <RGBAnimation.h>
+#include <RGBAnimationSequence.h>
 
 unsigned char invader1A[8] = {
     B00011000, 
@@ -125,13 +127,9 @@ unsigned char invader4D[8] = {
   B00000000,
 };
 
-const int SEQUENCE_COUNT = 27;
-Screen leds(8,8);
-Glyph* imageSequence[SEQUENCE_COUNT];
-ColorType imageColors[SEQUENCE_COUNT];
-unsigned long imageTime[SEQUENCE_COUNT];
-unsigned long counter = 0;
-int sequenceIdx = 0;
+RGBLEDMatrix leds(8,8);
+RGBAnimationSequence *animation;
+const int ANIMATION_ITEMS_SIZE = 4;
 
 void setup() {
   Glyph* a1a = new Glyph(8,8,invader1A);
@@ -144,64 +142,105 @@ void setup() {
   Glyph* a4b = new Glyph(8,8,invader4B);
   Glyph* a4c = new Glyph(8,8,invader4C);
   Glyph* a4d = new Glyph(8,8,invader4D);
- 
-  memset(&imageColors[0], B00001000, 5);
-  memset(&imageColors[5], B00100000, 5);
-  memset(&imageColors[10], B00100100, 5);
-  memset(&imageColors[15], B00000010, 12);
 
-  for (int i = 0; i < 15; i++ ) {
-    imageTime[i] = 2000;
-  }
-  for (int i = 15; i < SEQUENCE_COUNT; i++ ) {
-    imageTime[i] = 1000;
-  }
+
+  RGBAnimationSequence::AnimationItem* aniItems = new RGBAnimationSequence::AnimationItem[ANIMATION_ITEMS_SIZE];
+  GlyphSequenceAnimation::Frame* frames;
+
+  // first
+  frames = new GlyphSequenceAnimation::Frame[2];
+  frames[0].glyph = a1a;
+  frames[0].interval = 500;
+  frames[0].foreground = B00001000;
+  frames[0].background = BLACK_COLOR;
+
+  frames[1].glyph = a1b;
+  frames[1].interval = 500;
+  frames[1].foreground = B00001000;
+  frames[1].background = BLACK_COLOR;
   
-  imageSequence[0] = a1a;
-  imageSequence[1] = a1b;
-  imageSequence[2] = a1a;
-  imageSequence[3] = a1b;
-  imageSequence[4] = a1a;
-  imageSequence[5] = a2a;
-  imageSequence[6] = a2b;
-  imageSequence[7] = a2a;
-  imageSequence[8] = a2b;
-  imageSequence[9] = a2a;
-  imageSequence[10] = a3a;
-  imageSequence[11] = a3b;
-  imageSequence[12] = a3a;
-  imageSequence[13] = a3b;
-  imageSequence[14] = a3a;
-  imageSequence[15] = a4a;
-  imageSequence[16] = a4b;
-  imageSequence[17] = a4c;
-  imageSequence[18] = a4d;
-  imageSequence[19] = a4a;
-  imageSequence[20] = a4b;
-  imageSequence[21] = a4c;
-  imageSequence[22] = a4d;
-  imageSequence[23] = a4a;
-  imageSequence[24] = a4b;
-  imageSequence[25] = a4c;
-  imageSequence[26] = a4d;
+  aniItems[0].animation = new GlyphSequenceAnimation( leds, frames, 2 );
+  aniItems[0].appearMillis = 4000;
+  aniItems[0].transitionMillis = 2000;
+  aniItems[0].transition = RGBAnimationSequence::TRANSITION_SLIDE_LEFT;
+  aniItems[0].transitionPad = 3;
+
+  // second
+  frames = new GlyphSequenceAnimation::Frame[2];
+  frames[0].glyph = a2a;
+  frames[0].interval = 500;
+  frames[0].foreground = B00100000;
+  frames[0].background = BLACK_COLOR;
+
+  frames[1].glyph = a2b;
+  frames[1].interval = 500;
+  frames[1].foreground = B00100000;
+  frames[1].background = BLACK_COLOR;
+  
+  aniItems[1].animation = new GlyphSequenceAnimation( leds, frames, 2 );
+  aniItems[1].appearMillis = 4000;
+  aniItems[1].transitionMillis = 2000;
+  aniItems[1].transition = RGBAnimationSequence::TRANSITION_SLIDE_RIGHT;
+  aniItems[1].transitionPad = 3;
+
+   // third
+  frames = new GlyphSequenceAnimation::Frame[2];
+  frames[0].glyph = a3a;
+  frames[0].interval = 500;
+  frames[0].foreground = B00100100;
+  frames[0].background = BLACK_COLOR;
+
+  frames[1].glyph = a3b;
+  frames[1].interval = 500;
+  frames[1].foreground = B00100100;
+  frames[1].background = BLACK_COLOR;
+
+  aniItems[2].animation = new GlyphSequenceAnimation( leds, frames, 2 );
+  aniItems[2].appearMillis = 4000;
+  aniItems[2].transitionMillis = 2000;
+  aniItems[2].transition = RGBAnimationSequence::TRANSITION_SLIDE_LEFT;
+  aniItems[2].transitionPad = 3;
+
+  // fourth
+  frames = new GlyphSequenceAnimation::Frame[4];
+  frames[0].glyph = a4a;
+  frames[0].interval = 250;
+  frames[0].foreground = B00000010;
+  frames[0].background = BLACK_COLOR;
+
+  frames[1].glyph = a4b;
+  frames[1].interval = 250;
+  frames[1].foreground = B00000010;
+  frames[1].background = BLACK_COLOR;
+
+  frames[2].glyph = a4c;
+  frames[2].interval = 250;
+  frames[2].foreground = B00000010;
+  frames[2].background = BLACK_COLOR;
+
+  frames[3].glyph = a4d;
+  frames[3].interval = 250;
+  frames[3].foreground = B00000010;
+  frames[3].background = BLACK_COLOR;
+
+  aniItems[3].animation = new GlyphSequenceAnimation( leds, frames, 4 );
+  aniItems[3].appearMillis = 6000;
+  aniItems[3].transitionMillis = 2000;
+  aniItems[3].transition = RGBAnimationSequence::TRANSITION_SLIDE_RIGHT;
+  aniItems[3].transitionPad = 3;
+
+  animation = new RGBAnimationSequence(
+      aniItems,
+      ANIMATION_ITEMS_SIZE
+    );
+
+//  Serial.begin(115200);
 }
 
 
 void loop() {  
   // put your main code here, to run repeatedly:
   leds.loop();
-  counter++;
-  if (counter%imageTime[sequenceIdx] == 0) {
-    sequenceIdx++;
-    if (sequenceIdx >= SEQUENCE_COUNT) {
-      sequenceIdx = 0;
-    }
-
-    leds.startDrawing();
-    leds.drawGlyph( *imageSequence[sequenceIdx], 0,0, imageColors[sequenceIdx], BLACK_COLOR );
-    leds.stopDrawing();
-    
-    counter = 0;
-  }
+  animation->loop();
 }
 

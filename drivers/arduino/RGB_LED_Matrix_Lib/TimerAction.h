@@ -21,34 +21,59 @@
 
 class TimerAction {
 private:
-  unsigned long _minMicrosDelta;
-  unsigned long  _lastLoopMicros;
-  
+	unsigned long _interval;
+	unsigned long  _lastLoopMicros;
+	unsigned long  _actionAverageMicros;
+	
+	unsigned long timeSinceLast(void) const {
+		unsigned long curMicros = micros();
+		// current micros is less than last micros. Since micros is 
+		// represented by a 4 byte "long", the count will roll over at
+		// about 1 hour 10 minutes.
+		unsigned long timeSinceLast;
+		if (curMicros < _lastLoopMicros) {
+			timeSinceLast = (0xFFFFUL - _lastLoopMicros) + curMicros;
+		}
+		else {
+			timeSinceLast = curMicros - _lastLoopMicros;
+		}
+		
+		return timeSinceLast;
+	}
 protected:
   virtual void action() = 0;
 public:
-  TimerAction(unsigned long minMicros) {
-    _minMicrosDelta = minMicros;
-    _lastLoopMicros = micros();
-  }
+  TimerAction(unsigned long intervalMicros)
+  		: 	_interval(intervalMicros),
+  			_actionAverageMicros(0)
+  	{
+		_interval = intervalMicros;
+		_lastLoopMicros = micros();
+	}
 
-  void loop() {
-    unsigned long curMicros = micros();
-    // current micros is less than last micros. Since micros is 
-    // represented by a 4 byte "long", the count will roll over at
-    // about 1 hour 10 minutes.
-    unsigned long timeSinceLast;
-    if (curMicros < _lastLoopMicros) {
-      timeSinceLast = (0xFFFFUL - _lastLoopMicros) + curMicros;
-    }
-    else {
-      timeSinceLast = curMicros - _lastLoopMicros;
-    }
-    if ( _minMicrosDelta <= timeSinceLast ) {
-      _lastLoopMicros = curMicros;
-      action();
-    }
-  }
+	virtual void loop() {
+		unsigned long delta = this->timeSinceLast();
+		if ( _interval <= delta ) {
+			_lastLoopMicros = micros();
+			this->action();
+			// at this point this->timeSinceLast() is the time it took to 
+			// do the action;
+			_actionAverageMicros = (_actionAverageMicros+this->timeSinceLast())/2;
+		}
+	}
+
+	unsigned long intervalMicros(void) const {
+		return _interval;
+	}
+	
+	void setIntervalMicros(unsigned long intervalMicros) {
+		_interval = intervalMicros;
+	}
+	
+	void setIntervalMillis(unsigned long intervalMillis) {
+		_interval = intervalMillis*1000;
+	}
+	
 };
 
 #endif //__TIMERACTION_H__

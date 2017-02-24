@@ -19,9 +19,8 @@
 #include <Arduino.h>
 #include "Glyph.h"
 
-#define BYTE_BUFFER_SIZE(rows,cols) ((rows*cols/8) + (rows*cols%8 == 0 ? 0 : 1))
 
-// pre-calculate the bit masks to speed up over: 1<<(7-bitIdx%8)
+// pre-calculate the bit masks to speed up over 1<<(7-bitIdx%8)
 const unsigned char BIT_MASKS[8] = {
 		B10000000,
 		B01000000,
@@ -38,42 +37,65 @@ const unsigned char BIT_MASKS[8] = {
 Glyph::Glyph( int rows, int columns, unsigned char* data )
 	: 	_rows( rows ),
 		_columns( columns ),
-		_data( data != NULL ? data : new unsigned char[BYTE_BUFFER_SIZE(rows,columns)] ),
-		_manageData( data != NULL ? false : true )
+		_bits( new bool[rows*columns] ),
+		_manageMemory(true)
 {
-	if ( NULL == data ) {
-		memset(_data, 0, BYTE_BUFFER_SIZE(rows,columns));
-	} 
+	// storing as a bool array for speed reasons
+	if ( data != NULL ) {
+		for (int y = 0; y < rows; y++) {
+			for (int x = 0; x < columns; x++ ) {
+				int bitIdx = y*columns + x;
+				_bits[bitIdx] = ( ( data[bitIdx/8] & BIT_MASKS[bitIdx%8] ) != 0 );
+			}
+		}
+	}
+}
+
+Glyph::Glyph( int rows, int columns, bool* data )
+	: 	_rows( rows ),
+		_columns( columns ),
+		_bits( data ),
+		_manageMemory(false)
+{
+	// assume the passed boolean array is of the right form. 
 }
 
 Glyph::Glyph( const Glyph& other )
 	: 	_rows( other._rows ),
 		_columns( other._columns ),
-		_data(new unsigned char[BYTE_BUFFER_SIZE(other._rows,other._columns)]),
-		_manageData( true )
+		_bits( new bool[(other._rows*other._columns)] )
 {
-	memcpy(_data, other._data, BYTE_BUFFER_SIZE(_rows,_columns));
+	memcpy(_bits, other._bits, (other._rows*other._columns)*sizeof(bool));
 }
 
 Glyph::~Glyph() {
-	if (_manageData) {
-		delete _data;
-	}
+	delete _bits;
 }
 void Glyph::setBit( int row, int column ) {
 	int bitIdx = row*this->columns() + column;
 	
-	_data[bitIdx/8] |= BIT_MASKS[bitIdx%8];
+	_bits[bitIdx] = true;
 }
 void Glyph::clearBit( int row, int column ) {
 	int bitIdx = row*this->columns() + column;
 
-	_data[bitIdx/8] &= ~BIT_MASKS[bitIdx%8];
+	_bits[bitIdx] = false;
 }
 
 bool Glyph::getBit( int row, int column ) const {
 	int bitIdx = row*this->columns() + column;
 	
-	return ( ( _data[bitIdx/8] & BIT_MASKS[bitIdx%8] ) != 0 );
+	return _bits[bitIdx];
+}
+
+RGBImage* Glyph::getImageWithColor( ColorType foreground, ColorType background ) const {
+	RGBImage* img = new RGBImage( _rows, _columns );
+
+	for (int y = 0; y < _rows; y++) {
+		for (int x = 0; x < _columns; x++) {
+			img->pixel(y, x) = this->getBit(y,x) ? foreground : background;
+		}
+	}
+	return img;
 }
 

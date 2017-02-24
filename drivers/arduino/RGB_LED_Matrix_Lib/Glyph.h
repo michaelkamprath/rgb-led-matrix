@@ -19,6 +19,8 @@
 #ifndef __GLYPH_H__
 #define __GLYPH_H__
 
+#include "RGBImage.h"
+
 /***
  * Glyph
  *
@@ -33,12 +35,13 @@ private:
 	
 	int _rows;
 	int _columns;
-	unsigned char* _data;
-	bool _manageData;
-	
+	bool* _bits;
+	bool _manageMemory;
+		
 public:
 
 	Glyph( int rows, int columns, unsigned char* data = NULL );
+	Glyph( int rows, int columns, bool* data );
 	Glyph( const Glyph& other );
 	virtual ~Glyph();
 	
@@ -48,6 +51,11 @@ public:
 	void setBit( int row, int column );
 	void clearBit( int row, int column );
 	bool getBit( int row, int column ) const;
+	
+	RGBImage* getImageWithColor(
+			ColorType foreground,
+			ColorType background = TRANSPARENT_COLOR
+		) const;
 };
  
 
