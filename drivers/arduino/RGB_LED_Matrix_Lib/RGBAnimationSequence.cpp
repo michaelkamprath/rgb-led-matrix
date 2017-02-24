@@ -82,6 +82,8 @@ void RGBAnimationSequence::action() {
 		else if ( 
 					(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_LEFT)
 					||(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_RIGHT)
+					||(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_UP)
+					||(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_DOWN)
 				) 
 		{
 			_transitionItemIdx = _curItemIdx+1;
@@ -94,22 +96,42 @@ void RGBAnimationSequence::action() {
 			
 			_curItemOriginX = 0;
 			_curItemOriginY = 0;
-			if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_RIGHT) {
+			if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_RIGHT ) {
 				_nextItemOriginX = -(nextAni->columns() + _aniArray[_curItemIdx].transitionPad);
 				curAni->setLeftPad( _aniArray[_curItemIdx].transitionPad );
 			}
-			else {
+			else if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_LEFT ){
 				_nextItemOriginX = curAni->columns() + _aniArray[_curItemIdx].transitionPad;
 				curAni->setRightPad( _aniArray[_curItemIdx].transitionPad );
 			}
-			_nextItemOriginY = 0;
+			else {
+				_nextItemOriginX = 0;
+			}
+			
+			if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_DOWN ) {
+				_nextItemOriginY = -(nextAni->rows() + _aniArray[_curItemIdx].transitionPad);
+				curAni->setTopPad( _aniArray[_curItemIdx].transitionPad );
+			}
+			else if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_UP ){
+				_nextItemOriginY = curAni->rows() + _aniArray[_curItemIdx].transitionPad;
+				curAni->setBottomPad( _aniArray[_curItemIdx].transitionPad );
+			}
+			else {
+				_nextItemOriginY = 0;
+			}
 			
 			curAni->setOriginRow(_curItemOriginY);
 			curAni->setOriginColumn(_curItemOriginX);
 			nextAni->setOriginRow(_nextItemOriginY);
 			nextAni->setOriginColumn(_nextItemOriginX);
 			
-			_transitionIntervalMillis = _aniArray[_curItemIdx].transitionMillis/abs(_nextItemOriginX);
+			if ( _aniArray[_curItemIdx].transition == TRANSITION_SLIDE_RIGHT
+				|| _aniArray[_curItemIdx].transition == TRANSITION_SLIDE_LEFT )
+			{
+				_transitionIntervalMillis = _aniArray[_curItemIdx].transitionMillis/abs(_nextItemOriginX);
+			} else {
+				_transitionIntervalMillis = _aniArray[_curItemIdx].transitionMillis/abs(_nextItemOriginY);
+			}
 			_transitionStep = 0;
 			_itemIsInView[_transitionItemIdx] = true;
 	
@@ -130,6 +152,14 @@ void RGBAnimationSequence::action() {
 			_curItemOriginX++;
 			_nextItemOriginX++;
 		}
+		else if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_DOWN ) {	
+			_curItemOriginY++;
+			_nextItemOriginY++;
+		}
+		else if (_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_UP ) {	
+			_curItemOriginY--;
+			_nextItemOriginY--;
+		}
 
 		curAni->setOriginRow(_curItemOriginY);
 		curAni->setOriginColumn(_curItemOriginX);
@@ -139,11 +169,30 @@ void RGBAnimationSequence::action() {
 		curAni->update();
 		nextAni->update();
 		
-		if (_nextItemOriginX == 0) {
+		if ( 	(	
+					(
+						(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_LEFT)
+						||(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_RIGHT)
+					) &&(
+						_nextItemOriginX == 0
+					)
+				)||(
+					(
+						(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_DOWN)
+						||(_aniArray[_curItemIdx].transition == TRANSITION_SLIDE_UP)
+					) &&(
+						_nextItemOriginY == 0
+					)
+				)
+			) {
 			curAni->setRightPad( 0 );
 			curAni->setLeftPad( 0 );
+			curAni->setTopPad( 0 );
+			curAni->setBottomPad( 0 );
 			nextAni->setRightPad( 0 );
 			nextAni->setLeftPad( 0 );
+			nextAni->setTopPad( 0 );
+			nextAni->setBottomPad( 0 );
 			_itemIsInView[_curItemIdx] = false;
 			_curState = ANIMATION_ITEM;
 			_curItemIdx = _transitionItemIdx;

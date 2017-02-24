@@ -39,6 +39,10 @@ private:
 	ColorType _rightPadColor;
 	int _leftPadSize;
 	ColorType _leftPadColor;
+	int _topPadSize;
+	ColorType _topPadColor;
+	int _bottomPadSize;
+	ColorType _bottomPadColor;
 	
 protected:
 	virtual void action();
@@ -80,6 +84,8 @@ public:
 	
 	void setRightPad( int padSize, ColorType padColor = BLACK_COLOR );
 	void setLeftPad( int padSize, ColorType padColor = BLACK_COLOR );
+	void setTopPad( int padSize, ColorType padColor = BLACK_COLOR );
+	void setBottomPad( int padSize, ColorType padColor = BLACK_COLOR );
 };
 
 class GlyphSequenceAnimation : public RGBAnimationBase {

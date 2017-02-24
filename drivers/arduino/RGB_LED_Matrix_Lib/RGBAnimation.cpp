@@ -36,7 +36,11 @@ RGBAnimationBase::RGBAnimationBase(
 		_rightPadSize(0),
 		_rightPadColor(BLACK_COLOR),
 		_leftPadSize(0),
-		_leftPadColor(BLACK_COLOR)
+		_leftPadColor(BLACK_COLOR),
+		_topPadSize(0),
+		_topPadColor(BLACK_COLOR),
+		_bottomPadSize(0),
+		_bottomPadColor(BLACK_COLOR)
 {
 
 }
@@ -73,6 +77,29 @@ void RGBAnimationBase::update() {
 			}
 		}
 	}
+	if (_topPadSize > 0) {
+		int imgTopRow = this->getOriginRow();
+		for (	int y = imgTopRow - _topPadSize >= 0 ? imgTopRow - _topPadSize : 0;
+				(y < _matrix.image().rows())&&(y < imgTopRow);
+				y++ )
+		{
+			for (int x = 0; x < _matrix.image().columns(); x++) {
+				_matrix.image().pixel(y,x) = _topPadColor;
+			}
+		}
+	}
+	if (_bottomPadSize > 0) {
+		int imgBottomRow = this->getOriginRow() + this->rows();
+		for (	int y = imgBottomRow >= 0 ? imgBottomRow : 0;
+				(y < _matrix.image().rows())&&(y < imgBottomRow + _bottomPadSize);
+				y++ )
+		{
+			for (int x = 0; x < _matrix.image().columns(); x++) {
+				_matrix.image().pixel(y,x) = _bottomPadColor;
+			}
+		}
+	}
+
 	_matrix.stopDrawing();
 }
 
@@ -83,6 +110,14 @@ void RGBAnimationBase::setRightPad( int padSize, ColorType padColor ) {
 void RGBAnimationBase::setLeftPad( int padSize, ColorType padColor ) {
 	_leftPadSize = padSize;
 	_leftPadColor = padColor;
+}
+void RGBAnimationBase::setTopPad( int padSize, ColorType padColor ) {
+	_topPadSize = padSize;
+	_topPadColor = padColor;
+}
+void RGBAnimationBase::setBottomPad( int padSize, ColorType padColor ) {
+	_bottomPadSize = padSize;
+	_bottomPadColor = padColor;
 }
 
 #pragma mark - GlyphSequenceAnimation

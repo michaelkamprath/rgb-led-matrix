@@ -237,14 +237,14 @@ RGBAnimationSequence::AnimationItem aniItems[ANIMATION_ITEMS_SIZE] {
     new GlyphSequenceAnimation( leds, ani3, 2 ),
     4000,
     2000,
-    RGBAnimationSequence::TRANSITION_SLIDE_LEFT,
+    RGBAnimationSequence::TRANSITION_SLIDE_DOWN,
     2
   },
   {
-    new GlyphSequenceAnimation( leds, ani4, 2 ),
+    new GlyphSequenceAnimation( leds, ani4, 4 ),
     6000,
     2000,
-    RGBAnimationSequence::TRANSITION_SLIDE_RIGHT,
+    RGBAnimationSequence::TRANSITION_SLIDE_UP,
     2
   },
   
