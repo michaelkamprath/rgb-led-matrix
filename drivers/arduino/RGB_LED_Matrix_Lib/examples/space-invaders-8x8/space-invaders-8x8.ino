@@ -217,7 +217,7 @@ GlyphSequenceAnimation::Frame ani4[4] = {
 };
 
 // animation
-const int ANIMATION_ITEMS_SIZE = 4;
+const int ANIMATION_ITEMS_SIZE = 9;
 RGBAnimationSequence::AnimationItem aniItems[ANIMATION_ITEMS_SIZE] {
   {
     new GlyphSequenceAnimation( leds, ani1, 2 ),
@@ -227,10 +227,31 @@ RGBAnimationSequence::AnimationItem aniItems[ANIMATION_ITEMS_SIZE] {
     2
   },
   {
+    new GlyphSequenceAnimation( leds, ani1, 2 ),
+    4000,
+    2000,
+    RGBAnimationSequence::TRANSITION_SLIDE_DOWN,
+    2
+  },
+  {
     new GlyphSequenceAnimation( leds, ani2, 2 ),
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_RIGHT,
+    2
+  },
+  {
+    new GlyphSequenceAnimation( leds, ani2, 2 ),
+    4000,
+    2000,
+    RGBAnimationSequence::TRANSITION_SLIDE_DOWN,
+    2
+  },
+  {
+    new GlyphSequenceAnimation( leds, ani3, 2 ),
+    4000,
+    2000,
+    RGBAnimationSequence::TRANSITION_SLIDE_LEFT,
     2
   },
   {
@@ -243,6 +264,20 @@ RGBAnimationSequence::AnimationItem aniItems[ANIMATION_ITEMS_SIZE] {
   {
     new GlyphSequenceAnimation( leds, ani4, 4 ),
     6000,
+    2000,
+    RGBAnimationSequence::TRANSITION_SLIDE_UP,
+    2
+  },
+  {
+    new GlyphSequenceAnimation( leds, ani3, 2 ),
+    0,
+    2000,
+    RGBAnimationSequence::TRANSITION_SLIDE_UP,
+    2
+  },
+  {
+    new GlyphSequenceAnimation( leds, ani2, 2 ),
+    0,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_UP,
     2
