@@ -29,10 +29,11 @@ In this case, Q7 of the first 74HC595 (U1) would be attached to C01, Q6 to C02, 
 
 In this common anode set up, the rows would be "on" when the proper 74HC595 pin is in the `high` state and the column would "on" when its respective pin is in the `low` state. Basically, the shift register is sinking the columns and powering the rows. This would be inversed if you are using a common cathode RGB LED. 
 
-There are two challenges with this design:
+There are three challenges with this design:
 
 1. You cannot light only (R1,C01) and (R2, C02) simultaneously as (R1,C02) and (R2, C01) will also be lit.
-2. Individual pins of the 74HC595 have a max current draw of 70 mA, but it's best to keep less than 20 mA. For LEDs that have a 20 mA draw, this means that the 74HC595 can't directly power an entire row of LEDs.
+2. Individual pins of the 74HC595 have a max current draw of 70 mA, but it's best to keep less than 20 mA. For LEDs that have a 20 mA draw, this means that the 74HC595 can't directly power an entire row of LEDs. 
+3. Most RGB LEDs have have differing forward voltages for each of the single color LEDs in them. Combined with parasitic capacitance of the LEDs, this can create unwanted currents in LEDs that are supposedly in the off state, in turn causing ghost images in the LED display.
 
 ### Multiplexing
 
@@ -41,4 +42,10 @@ To solve the first problem, we will multiplex the LED display. What this means i
 ### Switching Transistor
 If every LED in a row were lit, we'd exceed the  74 HC595 max current. However, we want to be able to light every LED in a row. So instead of powering the row directly, the 74HC595 will instead drive a transistor for each row, and the transistor will switch on or off the current powering the row. Since the design is using a common anode LEDs, the switching transistor will be PNP. If we were using a common cathode LED, the switching transistor would be NPN. 
 
-There is one small issue with using the switching transistor: the transistor does not turn off instantly. As we scan through the rows, the prior row's switching transistor will still provide a small amount of current to its row for a short period of time. This will cause a slight, but detectable glow in the LEDs of the prior row that are in the same columns as the LEDs int eh current row that are turned on. The best way to deal with this is to wait a very small amount of time (~5 micro seconds) after turning off a row before turning on the next row. Note that with using a PNP transistor to drive a row, the shift register's setting to turn it on now becomes `low` as a PNP transistor needs a negative voltage between the emitter and base to be turned on, which will allows positive current to flow into the row. 
+There is one small issue with using the switching transistor: the transistor does not turn off instantly. As we scan through the rows, the prior row's switching transistor will still provide a small amount of current to its row for a short period of time. This will cause a slight, but detectable glow in the LEDs of the prior row that are in the same columns as the LEDs in the current row that are turned on. This is frequently referred to as ghosting. 
+
+There are two ways to deal with this. The easiest correction is to wait a very small amount of time (~50 micro seconds) after turning off a row before turning on the next row. A hardware correction would be to add a Schottky diode to each transistor to improve its turn off time ( [see this article](http://electronics.stackexchange.com/questions/62271/learning-multiplexing-with-leds-transistor-switching-speeds) ).
+
+### Parasitic Capacitance in RGB LEDs
+This problem and solution is [explained nicely in this article](https://www.maximintegrated.com/en/app-notes/index.mvp/id/4111).
+ 
