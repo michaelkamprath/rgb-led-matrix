@@ -40,7 +40,7 @@ There are three challenges with this design:
 To solve the first problem, we will multiplex the LED display. What this means in practice is that we light only one row at a time, but cycle through each row fast enough that the human eye cannot see the blinking. 
 
 ### Switching Transistor
-If every LED in a row were lit, we'd exceed the  74 HC595 max current. However, we want to be able to light every LED in a row. So instead of powering the row directly, the 74HC595 will instead drive a transistor for each row, and the transistor will switch on or off the current powering the row. Since the design is using a common anode LEDs, the switching transistor will be PNP. If we were using a common cathode LED, the switching transistor would be NPN. 
+If every LED in a row were lit, we'd exceed the  74 HC595 max current. However, we want to be able to light every LED in a row. So instead of powering the row directly, the 74HC595 will instead drive a transistor for each row, and the transistor will switch on or off the current powering the row. Since the design is using a common anode LEDs, the switching transistor will be PNP. If we were using a common cathode LED, the switching transistor would be NPN. Note that with using a PNP transistor to drive a row, the shift register's setting to turn it on now becomes `low` as a PNP transistor needs a negative voltage between the emitter and base to be turned on, which will allows positive current to flow into the row.
 
 There is one small issue with using the switching transistor: the transistor does not turn off instantly. As we scan through the rows, the prior row's switching transistor will still provide a small amount of current to its row for a short period of time. This will cause a slight, but detectable glow in the LEDs of the prior row that are in the same columns as the LEDs in the current row that are turned on. This is frequently referred to as ghosting. 
 
@@ -48,4 +48,3 @@ There are two ways to deal with this. The easiest correction is to wait a very s
 
 ### Parasitic Capacitance in RGB LEDs
 This problem and solution is [explained nicely in this article](https://www.maximintegrated.com/en/app-notes/index.mvp/id/4111).
- 
