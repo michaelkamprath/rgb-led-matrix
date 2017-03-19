@@ -40,7 +40,7 @@ private:
   volatile uint8_t *_mosiPort;
   uint8_t _sclkMask;
   uint8_t _mosiMask;
-  
+ 
   static int maxScanCountForValue(unsigned char value);
   
   void shiftOutAllOff();

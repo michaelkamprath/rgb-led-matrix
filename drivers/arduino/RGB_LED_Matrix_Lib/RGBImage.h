@@ -54,6 +54,7 @@ const ColorType ORANGE_COLOR = 0x38;
 const ColorType CORAL_COLOR = 0x39;
 const ColorType TURQUOISE_COLOR = 0x1E;
 const ColorType VIOLET_COLOR = 0x27;
+const ColorType PURPLE_COLOR = B00010001;
 const ColorType LIME_COLOR = 0x2D;
 const ColorType SLATE_BLUE_COLOR = 0x16;
 

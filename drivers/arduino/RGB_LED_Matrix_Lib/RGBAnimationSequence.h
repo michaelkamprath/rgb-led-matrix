@@ -63,7 +63,12 @@ protected:
 	virtual void action();
 	
 public:
-
+	
+	// Note that while in most other parts of this lib it is OK to reuse
+	// objects in a sequence list (e.g., using the same Glyph multiple time 
+	// in a GlyphAnimation object), the RGBAnimationBase objects passed in
+	// the AnimationItem list here should all be distinct. The reason for that
+	// is that each animation's state needs to be maintained separately.
 	RGBAnimationSequence(
 			AnimationItem* aniArray,
 			int	aniArraySize

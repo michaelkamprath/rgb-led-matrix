@@ -158,7 +158,7 @@ void RGBLEDMatrix::shiftOutCurrentRow() {
 	}
 		// now write out the row bits
 	for (int i = _rows - 1; i >= 0; i-- ) {
-		if (i == _scanRow && rowNeedsPower) {
+		if (i == _scanRow && rowNeedsPower ) {
 			// shift out row bit
 			shiftOutBit(LOW);
 		}
