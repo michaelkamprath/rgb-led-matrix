@@ -19,85 +19,34 @@
 #include <Arduino.h>
 #include "RGBLEDMatrix.h"
 
-const unsigned long UPDATE_INTERVAL = 400;
+#define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
+#define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
+
+const unsigned long UPDATE_INTERVAL = 350;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
 	int columns,
-	int latchPin,
-	int clockPin,
-	int dataPin
+	int latchPin
 ) :		TimerAction(UPDATE_INTERVAL),
 		_latchPin(latchPin),
-		_clockPin(clockPin),
-		_dataPin(dataPin),
 		_rows(rows),
 		_columns(columns),
 		_screen_data(rows,columns),
-		_screen_buf(rows,columns)
+		_screen_buf(rows,columns),
+		_spiCache(SPICACHESIZE(rows,columns)),
+		_spiPadBits(SPICACHEPADBITS(rows,columns))
 {
 	_scanPass = 1;
 	_scanRow = 0;
 	_priorRow = rows-1;
 	pinMode(latchPin, OUTPUT);
-	pinMode(clockPin, OUTPUT);
-	pinMode(dataPin, OUTPUT);
-
-	_sclkPort = portOutputRegister(digitalPinToPort(clockPin));
-	_mosiPort = portOutputRegister(digitalPinToPort(dataPin));
-	_sclkMask = digitalPinToBitMask(clockPin);
-	_mosiMask = digitalPinToBitMask(dataPin);
+	digitalWrite(_latchPin, LOW);	
   
   	// sett everything off
-	uint8_t oldSREG = SREG;
-	cli();
-
-	this->shiftOutAllOff();
-	
-	SREG = oldSREG;
-	sei();
+  	shiftOutAllOff();
 	digitalWrite(_latchPin, HIGH);
 	digitalWrite(_latchPin, LOW);	
-
-}
-
-void RGBLEDMatrix::shiftOutBit( uint8_t bitValue ) {
-  	// fast writing of a bit to the shift register by directly manipulating pin state
-	*_sclkPort &= ~_sclkMask;		// clock LOW
-	if ( bitValue == HIGH ) {
-		*_mosiPort |= _mosiMask;	// data HIGH
-	} else {
-		*_mosiPort &= ~_mosiMask;	// DATA LOW
-	}
-	*_sclkPort |= _sclkMask;		// clock HIGH
-}
-
-void RGBLEDMatrix::writeOutBit( uint8_t bitValue ) {
-  	// safe writing of a bit to the shift register by using standard arduino calls
-  	// to use this version, change the code in action()
-	digitalWrite(_clockPin, LOW);
-	digitalWrite(_dataPin, bitValue);
-	digitalWrite(_clockPin, HIGH);
-}
-
-#define MAX_SCAN_PASS_COUNT 6
-int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
-	switch (value) {
-		case 0:
-			return 0;
-			break;
-		case 1:
-			return 1;
-			break;
-		case 2:
-			return 3;
-			break;
-		case 3:
-		default:
-			return MAX_SCAN_PASS_COUNT;
-			break;
-	}
-
 }
 
 void RGBLEDMatrix::shiftOutAllOff() {
@@ -106,67 +55,92 @@ void RGBLEDMatrix::shiftOutAllOff() {
 	// it would still be partially on when the first row is turned on causing the LEDs
 	// to glow slightly since the electrical path to the transistor transitioning off 
 	// shorter (less resistance)
-	
-	for (int i = 0; i < _columns; i++) {
-		shiftOutBit(HIGH); // red
-		shiftOutBit(HIGH); // green
-		shiftOutBit(HIGH); // blue
-	}
-	for (int i = _rows - 1; i >= 0; i-- ) {
-		shiftOutBit(HIGH);
-	}
+
+	// shift out any needed pad bits
+	_spiCache.shiftNLowBits(_spiPadBits);
+	_spiCache.shiftNLowBits(_columns*3);
+	_spiCache.shiftNHighBits(_rows);
 }
+
+#define MAX_SCAN_PASS_COUNT 6
+inline int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
+	switch (value) {
+		case 0:
+			return 0;
+			break;
+		case B00010000:
+		case B00000100:
+		case B00000001:
+			return 1;
+			break;
+		case B00100000:
+		case B00001000:
+		case B00000010:		
+			return 3;
+			break;
+		case B00110000:
+		case B00001100:
+		case B00000011:		
+		default:
+			return MAX_SCAN_PASS_COUNT;
+			break;
+	}
+
+}
+
 void RGBLEDMatrix::shiftOutCurrentRow() {
 	
-		
+	// shift out any needed pad bits
+	_spiCache.shiftNLowBits(_spiPadBits);
+	
 	bool rowNeedsPower = false;
 	for (int col = 0; col < _columns; col++) {
-		short rgbValue = _screen_data.pixel(_scanRow,col);
+		short rgbValue = _screen_data.pixel(_scanRow, col);
 
 		// a form of Binary Code Modulation is used to control
 		// the LED intensity at variou levels.
 		
 		// red
-		short redValue = (rgbValue & RED_MASK)>>RED_BIT_SHIFT;
+		short redValue = rgbValue & RED_MASK;
 		if (redValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(redValue) ) {
-			shiftOutBit(LOW);
+			_spiCache.shiftOutBit(LOW);
 			rowNeedsPower = true;
 		}
 		else {
-			shiftOutBit(HIGH);
+			_spiCache.shiftOutBit(HIGH);
 		}
 
 		// green
-		short greenValue = (rgbValue & GREEN_MASK)>>GREEN_BIT_SHIFT;
+		short greenValue = rgbValue & GREEN_MASK;
 		if (greenValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(greenValue) ) {
-			shiftOutBit(LOW);
+			_spiCache.shiftOutBit(LOW);
 			rowNeedsPower = true;
 		}
 		else {
-			shiftOutBit(HIGH);
+			_spiCache.shiftOutBit(HIGH);
 		}
 
 		// blue
-		short blueValue = (rgbValue & BLUE_MASK)>>BLUE_BIT_SHIFT;
+		short blueValue = (rgbValue & BLUE_MASK);
 		if (blueValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(blueValue) ) {
-			shiftOutBit(LOW);
+			_spiCache.shiftOutBit(LOW);
 			rowNeedsPower = true;
 		}
 		else {
-			shiftOutBit(HIGH);
+			_spiCache.shiftOutBit(HIGH);
 		}
 	}
-		// now write out the row bits
-	for (int i = _rows - 1; i >= 0; i-- ) {
-		if (i == _scanRow && rowNeedsPower ) {
-			// shift out row bit
-			shiftOutBit(LOW);
-		}
-		else {
-			shiftOutBit(HIGH);
-		}
+	
+	// now write out the row bits
+	if (rowNeedsPower) {
+		// this code design is for speed. It reduces the if-checks
+		// within a loop
+		_spiCache.shiftNHighBits((_rows - 1) - _scanRow);
+		_spiCache.shiftOutBit(LOW);
+		_spiCache.shiftNHighBits(_scanRow);
+	} else {
+		_spiCache.shiftNHighBits(_rows);		
 	}
-
 }
 void RGBLEDMatrix::action() {    
 
@@ -190,12 +164,5 @@ void RGBLEDMatrix::action() {
 		_screen_data.copy(_screen_buf);
 	}
 
-
-	uint8_t oldSREG = SREG;
-	cli();
-
 	this->shiftOutCurrentRow();
-
-	SREG = oldSREG;
-	sei();
 }

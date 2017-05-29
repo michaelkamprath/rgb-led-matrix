@@ -20,58 +20,49 @@
 #define __RGBLEDMATRIX_H__
 #include "TimerAction.h"
 #include "RGBImage.h"
+#include "SPIBitCache.h"
 
 class RGBLEDMatrix : public TimerAction {
 private:
-  int _latchPin;
-  int _clockPin;
-  int _dataPin;
-  int _rows;
-  int _columns;
-  RGBImage _screen_data;
-  RGBImage _screen_buf;
+	int _latchPin;
+	int _rows;
+	int _columns;
+	RGBImage _screen_data;
+	RGBImage _screen_buf;
 
-  int _scanPass;
-  int _scanRow;
-  int _priorRow;
-  boolean _drawingActive;
-  
-  volatile uint8_t *_sclkPort;
-  volatile uint8_t *_mosiPort;
-  uint8_t _sclkMask;
-  uint8_t _mosiMask;
- 
-  static int maxScanCountForValue(unsigned char value);
-  
-  void shiftOutAllOff();
-  void shiftOutCurrentRow();
-  // fast writing of a bit to the shift register by directly manipulating pin state
-  void shiftOutBit( uint8_t bitValue );
-  
-  // safe writing of a bit to the shift register by using standard arduino calls
-  void writeOutBit( uint8_t bitValue );
+	int _scanPass;
+	int _scanRow;
+	int _priorRow;
+	boolean _drawingActive;
+
+	SPIBitCache	_spiCache;
+	int _spiPadBits;
+	
+	static int maxScanCountForValue(unsigned char value);
+
+	void shiftOutAllOff();
+	void shiftOutCurrentRow();
 protected:
-  virtual void action();
+	virtual void action();
 public:
   
 
-	RGBLEDMatrix( int rows,
-		  int columns,
-		  int latchPin = 5,
-		  int clockPin = 6,
-		  int dataPin  = 7
+	RGBLEDMatrix(
+			int rows,
+			int columns,
+			int latchPin = 5
 		);
 
 	RGBImage& image(void)				{ return _screen_buf; }
 	const RGBImage& image(void) const	{ return _screen_buf; }
-	  
   
+
 	void startDrawing(void)   			{ _drawingActive = true; }
 	void stopDrawing(void)    			{ _drawingActive = false; }
 
 	int rows() const          			{ return _rows; }
 	int columns() const       			{ return _columns; }
-  
+
 };
 
 #endif //__SCREEN_H__
