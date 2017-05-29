@@ -22,7 +22,7 @@
 #define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
 #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
 
-const unsigned long UPDATE_INTERVAL = 350;
+const unsigned long UPDATE_INTERVAL = 300;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
@@ -62,7 +62,7 @@ void RGBLEDMatrix::shiftOutAllOff() {
 	_spiCache.shiftNHighBits(_rows);
 }
 
-#define MAX_SCAN_PASS_COUNT 6
+#define MAX_SCAN_PASS_COUNT 8
 inline int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
 	switch (value) {
 		case 0:
@@ -76,7 +76,7 @@ inline int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
 		case B00100000:
 		case B00001000:
 		case B00000010:		
-			return 3;
+			return 4;
 			break;
 		case B00110000:
 		case B00001100:
