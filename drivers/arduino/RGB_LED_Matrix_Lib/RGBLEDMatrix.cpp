@@ -143,11 +143,6 @@ void RGBLEDMatrix::shiftOutCurrentRow() {
 	}
 }
 void RGBLEDMatrix::action() {    
-
-
-	digitalWrite(_latchPin, HIGH);
-	digitalWrite(_latchPin, LOW);
-	
 	_priorRow = _scanRow;
 	_scanRow++;
 	if (_scanRow >= _rows) {
