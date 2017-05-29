@@ -73,6 +73,9 @@ private:
 	int _columns;
 	ColorType* _data;
 
+	int _dataSize;
+	mutable int _pixelItrCounter;
+	mutable ColorType* _pixelItrPtr;
 public:
 	RGBImage(int rows, int columns);
 	RGBImage(int rows, int columns, ColorType* data );
@@ -86,6 +89,8 @@ public:
 
 	ColorType& pixel( int row, int column );
 	const ColorType& pixel( int row, int column ) const;
+	
+	
 	void placeImageAt( const RGBImage& image, int row, int column );
 	void paintColor( ColorType color ); 
 	void drawLine(

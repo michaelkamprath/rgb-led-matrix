@@ -23,7 +23,10 @@
 RGBImage::RGBImage(int rows, int columns)
 :	_rows(rows),
 	_columns(columns),
-	_data(new ColorType[rows*columns])
+	_data(new ColorType[rows*columns]),
+	_dataSize(rows*columns),
+	_pixelItrCounter(0),
+	_pixelItrPtr(_data)
 {
 	this->paintColor(BLACK_COLOR);
 }
@@ -31,7 +34,10 @@ RGBImage::RGBImage(int rows, int columns)
 RGBImage::RGBImage(int rows, int columns, ColorType* data )
 :	_rows(rows),
 	_columns(columns),
-	_data(new ColorType[rows*columns])
+	_data(new ColorType[rows*columns]),
+	_dataSize(rows*columns),
+	_pixelItrCounter(0),
+	_pixelItrPtr(_data)
 {
 	memcpy(_data, data, rows*columns);
 }
@@ -39,7 +45,10 @@ RGBImage::RGBImage(int rows, int columns, ColorType* data )
 RGBImage::RGBImage(const RGBImage& other)
 :	_rows(other._rows),
 	_columns(other._columns),
-	_data(new ColorType[other._rows*other._columns])
+	_data(new ColorType[other._rows*other._columns]),
+	_dataSize(other._rows*other._columns),
+	_pixelItrCounter(0),
+	_pixelItrPtr(_data)
 {
 	this->copy(other);
 }
