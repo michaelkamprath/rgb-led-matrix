@@ -63,7 +63,7 @@ void SPIBitCache::shiftOutBit( uint8_t bitValue ) {
 		_cacheBitCounter = 0;
 		_cacheByteCounter++;
 		if (_cacheByteCounter >= _cacheBytes) {
-			// time to fluch the cache
+			// time to flush the cache
 			flushCache();
 			_cacheByteCounter = 0;
 		}
@@ -81,7 +81,7 @@ void SPIBitCache::shiftNLowBits( int bitCount ) {
 	
 		_cacheByteCounter += byteCounterIncrement;
 		if (_cacheByteCounter >= _cacheBytes) {
-			// time to fluch the cache
+			// time to flush the cache
 			flushCache();
 			_cacheByteCounter = 0;
 			_cacheBitCounter = 0;
@@ -99,7 +99,7 @@ void SPIBitCache::shiftNHighBits( int bitCount ) {
 		
 		_cacheByteCounter++;
 		if (_cacheByteCounter >= _cacheBytes) {
-			// time to fluch the cache and must stop recursing
+			// time to flush the cache and must stop recursing
 			flushCache();
 			_cacheByteCounter = 0;
 			_cacheBitCounter = 0;
