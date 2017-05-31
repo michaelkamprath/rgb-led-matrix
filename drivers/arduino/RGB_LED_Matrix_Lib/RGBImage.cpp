@@ -25,8 +25,7 @@ RGBImage::RGBImage(int rows, int columns)
 	_columns(columns),
 	_data(new ColorType[rows*columns]),
 	_dataSize(rows*columns),
-	_pixelItrCounter(0),
-	_pixelItrPtr(_data)
+	_dirty(false)
 {
 	this->paintColor(BLACK_COLOR);
 }
@@ -36,8 +35,7 @@ RGBImage::RGBImage(int rows, int columns, ColorType* data )
 	_columns(columns),
 	_data(new ColorType[rows*columns]),
 	_dataSize(rows*columns),
-	_pixelItrCounter(0),
-	_pixelItrPtr(_data)
+	_dirty(false)
 {
 	memcpy(_data, data, rows*columns);
 }
@@ -47,8 +45,7 @@ RGBImage::RGBImage(const RGBImage& other)
 	_columns(other._columns),
 	_data(new ColorType[other._rows*other._columns]),
 	_dataSize(other._rows*other._columns),
-	_pixelItrCounter(0),
-	_pixelItrPtr(_data)
+	_dirty(other._dirty)
 {
 	this->copy(other);
 }
@@ -61,10 +58,12 @@ void RGBImage::copy(const RGBImage& other) {
 	// only copy if same dimensions
 	if (other._rows == _rows && other._columns == _columns) {
 		memcpy(_data, other._data, _rows*_columns);
+		_dirty = other._dirty;
 	}
 }
 
 ColorType& RGBImage::pixel( int row, int column ) { 
+	_dirty = true;
 	return _data[row*_columns + column];
 }
 const ColorType& RGBImage::pixel( int row, int column ) const {
@@ -81,6 +80,7 @@ void RGBImage::placeImageAt( const RGBImage& image, int row, int column ) {
 		return;
 	}
 
+	_dirty = true;
 	int imageX = 0;
 	int thisX = column;
 	if (column < 0) {
@@ -112,6 +112,7 @@ void RGBImage::placeImageAt( const RGBImage& image, int row, int column ) {
 }
 
 void RGBImage::paintColor( ColorType color ) {
+	_dirty = true;
 	memset(_data,color,this->rows()*this->columns());
 }
 
@@ -123,6 +124,7 @@ void RGBImage::drawLine(
 		ColorType color
 	)
 {
+	_dirty = true;
 	if ( stopColumn != startColumn ) {
 		float delta_col = stopColumn - startColumn;
 		float delta_row = stopRow - startRow;
@@ -172,6 +174,7 @@ void RGBImage::drawRectangle(
 		return;
 	}
 	
+	_dirty = true;
 	for (int row = tlRow; row <= brRow; row++ ) {
 		if ( fill || row == tlRow || row == brRow ) {
 			memset(&this->pixel(row,tlColumn),color,brColumn-tlColumn+1);
@@ -199,6 +202,7 @@ void RGBImage::drawGlyph(
 		return;
 	}
 
+	_dirty = true;
 	int imageX = 0;
 	int thisX = column;
 	if (column < 0) {

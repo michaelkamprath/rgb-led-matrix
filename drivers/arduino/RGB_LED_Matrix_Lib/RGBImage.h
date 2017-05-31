@@ -74,8 +74,9 @@ private:
 	ColorType* _data;
 
 	int _dataSize;
-	mutable int _pixelItrCounter;
-	mutable ColorType* _pixelItrPtr;
+	
+	bool _dirty;
+
 public:
 	RGBImage(int rows, int columns);
 	RGBImage(int rows, int columns, ColorType* data );
@@ -85,6 +86,9 @@ public:
 	int rows(void) const		{ return _rows; }
 	int columns(void) const		{ return _columns; }
 
+	bool isDirty( void) const	{ return _dirty; }
+	void setNotDirty()			{ _dirty = false; }
+	
 	void copy(const RGBImage& other);
 
 	ColorType& pixel( int row, int column );
