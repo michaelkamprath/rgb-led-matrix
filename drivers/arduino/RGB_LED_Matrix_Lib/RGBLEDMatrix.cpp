@@ -26,10 +26,8 @@ const unsigned long UPDATE_INTERVAL = 300;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
-	int columns,
-	int latchPin
+	int columns
 ) :		TimerAction(UPDATE_INTERVAL),
-		_latchPin(latchPin),
 		_rows(rows),
 		_columns(columns),
 		_screen_data(rows,columns),
@@ -40,13 +38,9 @@ RGBLEDMatrix::RGBLEDMatrix(
 	_scanPass = 1;
 	_scanRow = 0;
 	_priorRow = rows-1;
-	pinMode(latchPin, OUTPUT);
-	digitalWrite(_latchPin, LOW);	
   
   	// sett everything off
   	shiftOutAllOff();
-	digitalWrite(_latchPin, HIGH);
-	digitalWrite(_latchPin, LOW);	
 }
 
 void RGBLEDMatrix::shiftOutAllOff() {

@@ -24,7 +24,6 @@
 
 class RGBLEDMatrix : public TimerAction {
 private:
-	int _latchPin;
 	int _rows;
 	int _columns;
 	RGBImage _screen_data;
@@ -49,8 +48,7 @@ public:
 
 	RGBLEDMatrix(
 			int rows,
-			int columns,
-			int latchPin = 5
+			int columns
 		);
 
 	RGBImage& image(void)				{ return _screen_buf; }
