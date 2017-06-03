@@ -79,7 +79,12 @@ private:
 
 public:
 	RGBImage(int rows, int columns);
-	RGBImage(int rows, int columns, ColorType* data );
+	RGBImage(
+			int rows,
+			int columns,
+			const ColorType* data,
+			bool isFromProgramSpace = false
+		);
 	RGBImage(const RGBImage& other);
 	virtual ~RGBImage();
 

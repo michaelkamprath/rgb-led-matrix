@@ -17,6 +17,7 @@
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 #include <Arduino.h>
 #include <string.h>
+#include <avr/pgmspace.h>
 #include "RGBImage.h"
 #include "Glyph.h"
 
@@ -30,14 +31,22 @@ RGBImage::RGBImage(int rows, int columns)
 	this->paintColor(BLACK_COLOR);
 }
 
-RGBImage::RGBImage(int rows, int columns, ColorType* data )
+RGBImage::RGBImage(
+	int rows,
+	int columns,
+	const ColorType* data,
+	bool isFromProgramSpace )
 :	_rows(rows),
 	_columns(columns),
 	_data(new ColorType[rows*columns]),
 	_dataSize(rows*columns),
 	_dirty(false)
 {
-	memcpy(_data, data, rows*columns);
+	if (isFromProgramSpace) {
+		memcpy_P(_data, data, rows*columns);		
+	} else {
+		memcpy(_data, data, rows*columns);
+	}
 }
 
 RGBImage::RGBImage(const RGBImage& other)
