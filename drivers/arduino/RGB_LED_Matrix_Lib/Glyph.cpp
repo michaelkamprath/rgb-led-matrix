@@ -17,6 +17,7 @@
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Arduino.h>
+#include <avr/pgmspace.h>
 #include "Glyph.h"
 
 
@@ -34,7 +35,12 @@ const unsigned char BIT_MASKS[8] = {
 
 // if byte buffer is passed, glyph will keep that for the data store
 // in order to reduce overall memory usage.
-Glyph::Glyph( int rows, int columns, unsigned char* data )
+Glyph::Glyph(
+	int rows,
+	int columns,
+	const unsigned char* data,
+	bool isFromProgramSpace
+)
 	: 	_rows( rows ),
 		_columns( columns ),
 		_bits( new bool[rows*columns] ),
@@ -45,7 +51,14 @@ Glyph::Glyph( int rows, int columns, unsigned char* data )
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < columns; x++ ) {
 				int bitIdx = y*columns + x;
-				_bits[bitIdx] = ( ( data[bitIdx/8] & BIT_MASKS[bitIdx%8] ) != 0 );
+				unsigned char dataByte = 0;
+				if (isFromProgramSpace) {
+					dataByte = pgm_read_word_near(data + bitIdx/8);
+				} else {
+					dataByte = data[bitIdx/8];
+				}
+				
+				_bits[bitIdx] = ( ( dataByte & BIT_MASKS[bitIdx%8] ) != 0 );
 			}
 		}
 	}

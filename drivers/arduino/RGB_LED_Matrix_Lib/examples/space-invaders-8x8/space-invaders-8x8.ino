@@ -18,7 +18,7 @@
 
 RGBLEDMatrix leds(8,8);
 
-unsigned char invader1A[8] = {
+PROGMEM unsigned char const invader1A[8] = {
     B00011000, 
     B00111100,
     B01111110,
@@ -29,7 +29,7 @@ unsigned char invader1A[8] = {
     B10100101
   };
 
-unsigned char invader1B[8] = {
+PROGMEM unsigned char const invader1B[8] = {
     B00011000,
     B00111100,
     B01111110,
@@ -41,7 +41,7 @@ unsigned char invader1B[8] = {
   };
 
 
-unsigned char invader2A[8] = {
+PROGMEM unsigned char const invader2A[8] = {
   B00000000,
   B00111100,
   B01111110,
@@ -52,7 +52,7 @@ unsigned char invader2A[8] = {
   B11000011
   };
 
-unsigned char invader2B[8] = {
+PROGMEM unsigned char const invader2B[8] = {
   B00111100,
   B01111110,
   B11011011,
@@ -63,7 +63,7 @@ unsigned char invader2B[8] = {
   B00100100,
   };
 
-unsigned char invader3A[8] = {
+PROGMEM unsigned char const invader3A[8] = {
   B00100100,
   B00100100,
   B01111110,
@@ -74,7 +74,7 @@ unsigned char invader3A[8] = {
   B00100100,
 };
 
-unsigned char invader3B[8] = {
+PROGMEM unsigned char const invader3B[8] = {
   B00100100,
   B10100101,
   B11111111,
@@ -85,7 +85,7 @@ unsigned char invader3B[8] = {
   B01000010,
 };
 
-unsigned char invader4A[8] = {
+PROGMEM unsigned char const invader4A[8] = {
   B00111100,
   B01111110,
   B00110011,
@@ -96,7 +96,7 @@ unsigned char invader4A[8] = {
   B00000000,
 };
  
-unsigned char invader4B[8] = {
+PROGMEM unsigned char const invader4B[8] = {
   B00111100,
   B01111110,
   B10011001,
@@ -107,7 +107,7 @@ unsigned char invader4B[8] = {
   B00001000,
 };
  
-unsigned char invader4C[8] = {
+PROGMEM unsigned char const invader4C[8] = {
   B00111100,
   B01111110,
   B11001100,
@@ -118,7 +118,7 @@ unsigned char invader4C[8] = {
   B00001000
 };
  
-unsigned char invader4D[8] = {
+PROGMEM unsigned char const invader4D[8] = {
   B00111100,
   B01111110,
   B01100110,
@@ -129,16 +129,16 @@ unsigned char invader4D[8] = {
   B00000000,
 };
 
-Glyph a1a(8,8,invader1A);
-Glyph a1b(8,8,invader1B);
-Glyph a2a(8,8,invader2A);
-Glyph a2b(8,8,invader2B);
-Glyph a3a(8,8,invader3A);
-Glyph a3b(8,8,invader3B);
-Glyph a4a(8,8,invader4A);
-Glyph a4b(8,8,invader4B);
-Glyph a4c(8,8,invader4C);
-Glyph a4d(8,8,invader4D);
+Glyph a1a(8,8,invader1A, true);
+Glyph a1b(8,8,invader1B, true);
+Glyph a2a(8,8,invader2A, true);
+Glyph a2b(8,8,invader2B, true);
+Glyph a3a(8,8,invader3A, true);
+Glyph a3b(8,8,invader3B, true);
+Glyph a4a(8,8,invader4A, true);
+Glyph a4b(8,8,invader4B, true);
+Glyph a4c(8,8,invader4C, true);
+Glyph a4d(8,8,invader4D, true);
 
 // first
 GlyphSequenceAnimation::Frame ani1[2] = {

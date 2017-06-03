@@ -40,7 +40,12 @@ private:
 		
 public:
 
-	Glyph( int rows, int columns, unsigned char* data = NULL );
+	Glyph( 
+			int rows,
+			int columns,
+			const unsigned char* data = NULL,
+			bool isFromProgramSpace = false
+		);
 	Glyph( int rows, int columns, bool* data );
 	Glyph( const Glyph& other );
 	virtual ~Glyph();
