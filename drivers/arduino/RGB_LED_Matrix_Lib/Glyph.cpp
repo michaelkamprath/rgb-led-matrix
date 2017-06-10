@@ -19,7 +19,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include "Glyph.h"
-
+#include "Utils.h"
 
 // pre-calculate the bit masks to speed up over 1<<(7-bitIdx%8)
 const unsigned char BIT_MASKS[8] = {
@@ -33,82 +33,185 @@ const unsigned char BIT_MASKS[8] = {
 		B00000001
 	};
 
-// if byte buffer is passed, glyph will keep that for the data store
-// in order to reduce overall memory usage.
-Glyph::Glyph(
+/***************************************
+ *
+ * GlyphBase
+ *
+ */
+#pragma mark GlyphBase
+
+GlyphBase::GlyphBase( 
+	int rows,
+	int columns
+)
+	:	_rows( rows ),
+		_columns( columns )
+{
+}
+GlyphBase::GlyphBase( const GlyphBase& other )
+	:	_rows( other.rows() ),
+		_columns( other.columns() )
+{
+}
+GlyphBase::~GlyphBase()
+{
+}
+
+bool GlyphBase::getBit( int row, int column ) const {
+	int bitIdx = row*this->columns() + column;	
+	if (this->isProgMem()) {
+		return pgm_read_byte_near( this->bits() + bitIdx );
+	} else {
+		return this->bits()[bitIdx];
+	}
+}
+
+RGBImage* GlyphBase::getImageWithColor( ColorType foreground, ColorType background ) const {
+	RGBImage* img = new RGBImage( this->rows(), this->columns() );
+	
+	if (this->isProgMem()) {
+		// creating a PROGMEM version of the loops for speed: don't have to check if PROGRMEM
+		// with every loop in getBits()
+		for (int y = 0; y < this->rows(); y++) {
+			for (int x = 0; x < this->columns(); x++) {
+				int bitIdx = y*this->columns() + x;
+				img->pixel(y, x) = (bool)pgm_read_byte_near( this->bits() + bitIdx ) ? foreground : background;
+			}
+		}	
+	} else {
+		for (int y = 0; y < this->rows(); y++) {
+			for (int x = 0; x < this->columns(); x++) {
+				img->pixel(y, x) = this->getBit(y,x) ? foreground : background;
+			}
+		}
+	}
+	return img;
+}
+
+bool* GlyphBase::generateBitBoolArray( 
 	int rows,
 	int columns,
 	const unsigned char* data,
 	bool isFromProgramSpace
-)
-	: 	_rows( rows ),
-		_columns( columns ),
-		_bits( new bool[rows*columns] ),
-		_manageMemory(true)
-{
-	// storing as a bool array for speed reasons
+) {
+	bool* boolArray = new bool[rows*columns];
+	
 	if ( data != NULL ) {
 		for (int y = 0; y < rows; y++) {
 			for (int x = 0; x < columns; x++ ) {
 				int bitIdx = y*columns + x;
 				unsigned char dataByte = 0;
 				if (isFromProgramSpace) {
-					dataByte = pgm_read_word_near(data + bitIdx/8);
+					dataByte = pgm_read_byte_near(data + bitIdx/8);
 				} else {
 					dataByte = data[bitIdx/8];
 				}
 				
-				_bits[bitIdx] = ( ( dataByte & BIT_MASKS[bitIdx%8] ) != 0 );
+				boolArray[bitIdx] = ( ( dataByte & BIT_MASKS[bitIdx%8] ) != 0 );
 			}
 		}
 	}
+	
+	return boolArray;
 }
 
-Glyph::Glyph( int rows, int columns, bool* data )
-	: 	_rows( rows ),
-		_columns( columns ),
-		_bits( data ),
-		_manageMemory(false)
+/***************************************
+ *
+ * MutableGlyph
+ *
+ */
+#pragma mark MutableGlyph
+
+MutableGlyph::MutableGlyph(
+	int rows,
+	int columns,
+	const unsigned char* data,
+	bool isFromProgramSpace
+)
+	:	GlyphBase( rows, columns ),
+		_bits(GlyphBase::generateBitBoolArray(rows, columns, data, isFromProgramSpace))
 {
-	// assume the passed boolean array is of the right form. 
 }
 
-Glyph::Glyph( const Glyph& other )
-	: 	_rows( other._rows ),
-		_columns( other._columns ),
-		_bits( new bool[(other._rows*other._columns)] )
+MutableGlyph::MutableGlyph( const GlyphBase& other )
+	: 	GlyphBase(other),
+		_bits( (bool*)memcpy_smart( 
+					new bool[(other.rows()*other.columns())],
+					other.bits(),
+					(other.rows()*other.columns())*sizeof(bool),
+					other.isProgMem() )
+				)
 {
-	memcpy(_bits, other._bits, (other._rows*other._columns)*sizeof(bool));
 }
 
-Glyph::~Glyph() {
+MutableGlyph::~MutableGlyph() {
 	delete _bits;
 }
-void Glyph::setBit( int row, int column ) {
+
+void MutableGlyph::setBit( int row, int column ) {
 	int bitIdx = row*this->columns() + column;
 	
 	_bits[bitIdx] = true;
 }
-void Glyph::clearBit( int row, int column ) {
+void MutableGlyph::clearBit( int row, int column ) {
 	int bitIdx = row*this->columns() + column;
 
 	_bits[bitIdx] = false;
 }
 
-bool Glyph::getBit( int row, int column ) const {
-	int bitIdx = row*this->columns() + column;
-	
-	return _bits[bitIdx];
+/***************************************
+ *
+ * Glyph
+ *
+ */
+#pragma mark Glyph
+
+// if byte buffer is passed, glyph will keep that for the data store
+// in order to reduce overall memory usage.
+
+Glyph::Glyph(
+	int rows,
+	int columns,
+	const unsigned char* data,
+	bool isFromProgramSpace
+)
+	: 	GlyphBase( rows, columns ),
+		_bits(GlyphBase::generateBitBoolArray(rows, columns, data, isFromProgramSpace)),
+		_isProgMem(false),
+		_manageMem(true)
+{
 }
 
-RGBImage* Glyph::getImageWithColor( ColorType foreground, ColorType background ) const {
-	RGBImage* img = new RGBImage( _rows, _columns );
+Glyph::Glyph( 
+	int rows,
+	int columns,
+	const bool* data,
+	bool isFromProgramSpace
+)	
+	: 	GlyphBase( rows, columns ),
+		_bits( data ),
+		_isProgMem(isFromProgramSpace),
+		_manageMem(false)
+{
+}
 
-	for (int y = 0; y < _rows; y++) {
-		for (int x = 0; x < _columns; x++) {
-			img->pixel(y, x) = this->getBit(y,x) ? foreground : background;
-		}
+
+Glyph::Glyph( const GlyphBase& other )
+	:	GlyphBase(other.rows(), other.columns()),
+		_bits(  other.isProgMem() ? 
+					other.bits() :
+					(bool*)memcpy(
+						new bool[(other.rows()*other.columns())],
+						other.bits(),
+						(other.rows()*other.columns())*sizeof(bool) )
+			),		
+		_isProgMem(other.isProgMem()),
+		_manageMem(true)
+{
+}
+
+Glyph::~Glyph() {
+	if (_manageMem) {
+		delete _bits;
 	}
-	return img;
 }
-

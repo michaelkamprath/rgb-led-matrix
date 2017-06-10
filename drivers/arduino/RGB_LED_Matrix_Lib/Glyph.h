@@ -30,41 +30,90 @@
  *
  */
 
-class Glyph {
+class GlyphBase {
 private:
 	
 	int _rows;
 	int _columns;
-	bool* _bits;
-	bool _manageMemory;
-		
-public:
 
-	Glyph( 
+public:
+	static bool* generateBitBoolArray( 
 			int rows,
 			int columns,
-			const unsigned char* data = NULL,
-			bool isFromProgramSpace = false
+			const unsigned char* data,
+			bool isFromProgramSpace
 		);
-	Glyph( int rows, int columns, bool* data );
-	Glyph( const Glyph& other );
-	virtual ~Glyph();
+
+	GlyphBase( 
+			int rows,
+			int columns
+		);
+	GlyphBase( const GlyphBase& GlyphBase );
+	virtual ~GlyphBase();
+	virtual const bool* bits(void) const = 0;
 	
 	int rows(void) const		{ return _rows; }
 	int columns(void) const		{ return _columns; }
-
-	void setBit( int row, int column );
-	void clearBit( int row, int column );
-	bool getBit( int row, int column ) const;
+	virtual bool isProgMem(void) const = 0;
+	
+	virtual bool getBit( int row, int column ) const;
 	
 	RGBImage* getImageWithColor(
 			ColorType foreground,
 			ColorType background = TRANSPARENT_COLOR
 		) const;
 };
+
+class MutableGlyph : public GlyphBase {
+private:
+	bool* _bits;
+		
+public:
+
+	MutableGlyph( 
+			int rows,
+			int columns,
+			const unsigned char* data = NULL,
+			bool isFromProgramSpace = false
+		);
+	MutableGlyph( const GlyphBase& other );
+	virtual ~MutableGlyph();
+	virtual const bool* bits(void) const	{ return _bits; }
+	bool* bits(void)						{ return _bits; }
+	
+	virtual bool isProgMem(void) const			{ return false; }
+	
+	void setBit( int row, int column );
+	void clearBit( int row, int column );
+};
  
+class Glyph : public GlyphBase {
+private:
+	const bool* _bits;
+	bool _isProgMem;
+	bool _manageMem;
+			
+public:
 
+	Glyph( 
+			int rows,
+			int columns,
+			const unsigned char* data,
+			bool isFromProgramSpace = false
+		);
+	Glyph( 
+			int rows,
+			int columns,
+			const bool* data,
+			bool isFromProgramSpace = false
+		);
+	Glyph( const GlyphBase& other );
+	virtual ~Glyph();	
+	virtual const bool* bits(void) const		{ return _bits; };
+	
+	virtual bool isProgMem(void) const			{ return _isProgMem; }
 
+};
 
 
 #endif
