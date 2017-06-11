@@ -72,7 +72,7 @@ public:
 	void stopScanning(void);
 
 	void shiftOutCurrentRow(void);
-
+	int nextTimerInterval(void) const;
 };
 
 #endif //__SCREEN_H__

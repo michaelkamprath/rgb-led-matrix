@@ -22,7 +22,9 @@
 #define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
 #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
 
-#define MAX_SCAN_PASS_COUNT 8
+#define MAX_SCAN_PASS_COUNT 3
+#define BASE_SCAN_TIMER_INTERVALS 13
+
 const unsigned long UPDATE_INTERVAL = 300;
 
 RGBLEDMatrix* gSingleton = 0;
@@ -74,7 +76,7 @@ size_t RGBLEDMatrix::maxFrameCountForValue(unsigned char value) {
 		case B00001100:
 		case B00000011:		
 		default:
-			return 3;
+			return MAX_SCAN_PASS_COUNT;
 			break;
 	}
 }
@@ -147,13 +149,7 @@ void RGBLEDMatrix::setRowBitsForFrame(
 }
 
 void RGBLEDMatrix::shiftOutRow( int row, int scanPass ) {
-	int frameIdx = 0;
-	if (scanPass > 4) {
-		frameIdx = 2;
-	} else if (scanPass > 1) {
-		frameIdx = 1;
-	}
-	_curScreenBitFrames[frameIdx]->transmitRow(row, _spi);
+	_curScreenBitFrames[scanPass-1]->transmitRow(row, _spi);
 }
 
 void RGBLEDMatrix::shiftOutCurrentRow( void ) {
@@ -163,7 +159,7 @@ void RGBLEDMatrix::shiftOutCurrentRow( void ) {
 	if (_scanRow >= this->rows()) {
 		_scanRow = 0;
 		_scanPass++;
-		if (_scanPass >= MAX_SCAN_PASS_COUNT) {
+		if (_scanPass > MAX_SCAN_PASS_COUNT) {
 			_scanPass = 1;
 		}
 	}	
@@ -177,6 +173,26 @@ void RGBLEDMatrix::action() {
 		this->copyScreenDataToBits(_screen_data);
 		_screen_data.setNotDirty();
 	}
+}
+
+int RGBLEDMatrix::nextTimerInterval(void) const {
+	/* We need to calculate a proper value to load the timer counter.
+	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
+	 * 100us / 8us = 12.5 --> 13.
+	 * MAX(uint8) + 1 - 13 = 244;
+	 */
+	int mulitplier = 1;
+	switch (_scanPass) {
+		case 2:
+			mulitplier = 2;
+			break;
+		case 3:
+			mulitplier = 4;
+			break;
+	}
+
+
+	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
 }
 
 void RGBLEDMatrix::startScanning(void) {
@@ -198,12 +214,7 @@ void RGBLEDMatrix::startScanning(void) {
 	TCCR2B |= (1<<CS22) | (1<<CS20); 
 	TCCR2B &= ~(1<<CS21);
  
-	/* We need to calculate a proper value to load the timer counter.
-	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
-	 * 100us / 8us = 12.5 --> 13.
-	 * MAX(uint8) + 1 - 13 = 244;
-	 */
-	gtcnt2StartValue = 244; 
+	gtcnt2StartValue = this->nextTimerInterval(); 
  
 	// load counter start point and enable the timer
 	TCNT2 = gtcnt2StartValue;
@@ -218,9 +229,9 @@ void stopScanning(void) {
 
 ISR(TIMER2_OVF_vect) {
 	noInterrupts(); 
-	// reload the timer
-	TCNT2 = gtcnt2StartValue;
 	// shift out next row
 	gSingleton->shiftOutCurrentRow();
+	// reload the timer
+	TCNT2 = gSingleton->nextTimerInterval();
   	interrupts(); 
 }
