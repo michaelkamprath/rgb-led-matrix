@@ -34,7 +34,7 @@ The bits of the byte are laid out as follows:
 	B = Blue
 
 */
-class Glyph;
+class GlyphBase;
 
 typedef unsigned char ColorType;
 
@@ -119,7 +119,7 @@ public:
 	);
 	
 	void drawGlyph(
-			const Glyph& image,
+			const GlyphBase& image,
 			int row,
 			int column,
 			ColorType foreground,

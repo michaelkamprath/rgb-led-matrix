@@ -196,7 +196,7 @@ void RGBImage::drawRectangle(
 }
 
 void RGBImage::drawGlyph(
-		const Glyph& glyph,
+		const GlyphBase& glyph,
 		int row,
 		int column,
 		ColorType foreground,
