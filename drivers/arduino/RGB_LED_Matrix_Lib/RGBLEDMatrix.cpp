@@ -28,7 +28,8 @@
 const unsigned long UPDATE_INTERVAL = 300;
 
 RGBLEDMatrix* gSingleton = 0;
-unsigned int gtcnt2StartValue;
+
+long int cycleCount = 0;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
@@ -51,7 +52,7 @@ RGBLEDMatrix::RGBLEDMatrix(
 	_screenBitFrames[4] = new LEDMatrixBits(rows, columns*3);
 	_screenBitFrames[5] = new LEDMatrixBits(rows, columns*3);
 	_curScreenBitFrames = &_screenBitFrames[0];
-	_screenBigFrameToggle = false;
+	_screenBitFrameToggle = false;
 	
 	_scanPass = 1;
 	_scanRow = 0;
@@ -83,7 +84,7 @@ size_t RGBLEDMatrix::maxFrameCountForValue(unsigned char value) {
 
 void RGBLEDMatrix::copyScreenDataToBits(const RGBImage& image) {
 	size_t idxOffset = 0;
-	if (!_screenBigFrameToggle) {
+	if (!_screenBitFrameToggle) {
 		idxOffset = 3;
 	}
 
@@ -94,11 +95,11 @@ void RGBLEDMatrix::copyScreenDataToBits(const RGBImage& image) {
 	for (int row = 0; row < this->rows(); row++) {
 		this->setRowBitsForFrame(row, 1, _screenBitFrames[0+idxOffset], image);
 		this->setRowBitsForFrame(row, 2, _screenBitFrames[1+idxOffset], image);
-		this->setRowBitsForFrame(row, 3, _screenBitFrames[1+idxOffset], image);
+		this->setRowBitsForFrame(row, 3, _screenBitFrames[2+idxOffset], image);
 	}
 	
 	noInterrupts(); // disable all interrupts
-	_screenBigFrameToggle = !_screenBigFrameToggle;
+	_screenBitFrameToggle = !_screenBitFrameToggle;
 	_curScreenBitFrames = &_screenBitFrames[0+idxOffset];
 	interrupts(); // enable all interrupts
 }
@@ -161,6 +162,7 @@ void RGBLEDMatrix::shiftOutCurrentRow( void ) {
 		_scanPass++;
 		if (_scanPass > MAX_SCAN_PASS_COUNT) {
 			_scanPass = 1;
+			cycleCount++;
 		}
 	}	
 }
@@ -175,7 +177,7 @@ void RGBLEDMatrix::action() {
 	}
 }
 
-int RGBLEDMatrix::nextTimerInterval(void) const {
+unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	/* We need to calculate a proper value to load the timer counter.
 	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
 	 * 100us / 8us = 12.5 --> 13.
@@ -184,10 +186,10 @@ int RGBLEDMatrix::nextTimerInterval(void) const {
 	int mulitplier = 1;
 	switch (_scanPass) {
 		case 2:
-			mulitplier = 2;
+			mulitplier = 3;
 			break;
 		case 3:
-			mulitplier = 4;
+			mulitplier = 5;
 			break;
 	}
 
@@ -213,11 +215,9 @@ void RGBLEDMatrix::startScanning(void) {
   	// configure to fire about every 100us
 	TCCR2B |= (1<<CS22) | (1<<CS20); 
 	TCCR2B &= ~(1<<CS21);
- 
-	gtcnt2StartValue = this->nextTimerInterval(); 
- 
+  
 	// load counter start point and enable the timer
-	TCNT2 = gtcnt2StartValue;
+	TCNT2 = this->nextTimerInterval();
 	TIMSK2 |= (1<<TOIE2);
 	
   	interrupts(); // enable all interrupts

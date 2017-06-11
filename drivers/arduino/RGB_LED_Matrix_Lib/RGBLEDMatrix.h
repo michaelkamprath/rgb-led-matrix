@@ -31,7 +31,7 @@ private:
 	
 	LEDMatrixBits **_curScreenBitFrames;
 	LEDMatrixBits *_screenBitFrames[6];
-	bool _screenBigFrameToggle;
+	bool _screenBitFrameToggle;
 	
 	int _scanPass;
 	int _scanRow;
@@ -72,7 +72,7 @@ public:
 	void stopScanning(void);
 
 	void shiftOutCurrentRow(void);
-	int nextTimerInterval(void) const;
+	unsigned int nextTimerInterval(void) const;
 };
 
 #endif //__SCREEN_H__
