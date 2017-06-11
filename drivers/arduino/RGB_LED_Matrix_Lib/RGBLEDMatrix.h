@@ -20,27 +20,34 @@
 #define __RGBLEDMATRIX_H__
 #include "TimerAction.h"
 #include "RGBImage.h"
-#include "SPIBitCache.h"
+#include "LEDMatrixBits.h"
+#include "SPIConnection.h"
 
 class RGBLEDMatrix : public TimerAction {
 private:
 	int _rows;
 	int _columns;
 	RGBImage _screen_data;
-	RGBImage _screen_buf;
-
+	
+	LEDMatrixBits **_curScreenBitFrames;
+	LEDMatrixBits *_screenBitFrames[6];
+	bool _screenBigFrameToggle;
+	
 	int _scanPass;
 	int _scanRow;
-	int _priorRow;
 	boolean _drawingActive;
 
-	SPIBitCache	_spiCache;
-	int _spiPadBits;
+	SPIConnection	_spi;
 	
-	static int maxScanCountForValue(unsigned char value);
-
-	void shiftOutAllOff();
-	void shiftOutCurrentRow();
+	void shiftOutRow( int row, int scanPass );
+	void setRowBitsForFrame(
+			int row,
+			size_t frame,
+			LEDMatrixBits* framePtr,
+			const RGBImage& image
+		);
+	void copyScreenDataToBits(const RGBImage& image);
+	size_t maxFrameCountForValue(unsigned char value);
 protected:
 	virtual void action();
 public:
@@ -51,8 +58,8 @@ public:
 			int columns
 		);
 
-	RGBImage& image(void)				{ return _screen_buf; }
-	const RGBImage& image(void) const	{ return _screen_buf; }
+	RGBImage& image(void)				{ return _screen_data; }
+	const RGBImage& image(void) const	{ return _screen_data; }
   
 
 	void startDrawing(void)   			{ _drawingActive = true; }
@@ -60,6 +67,11 @@ public:
 
 	int rows() const          			{ return _rows; }
 	int columns() const       			{ return _columns; }
+
+	void startScanning(void);
+	void stopScanning(void);
+
+	void shiftOutCurrentRow(void);
 
 };
 

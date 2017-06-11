@@ -26,6 +26,8 @@ void setup() {
   leds.pixel(3,1) = DARK_GRAY_COLOR;
   leds.pixel(3,2) = LIME_COLOR;
   leds.pixel(3,3) = SLATE_BLUE_COLOR;
+
+  leds.startScanning();
 }
 
 void loop() {
