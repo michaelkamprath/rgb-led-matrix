@@ -32,12 +32,13 @@ RGBLEDMatrix::RGBLEDMatrix(
 		_columns(columns),
 		_screen_data(rows,columns),
 		_screen_buf(rows,columns),
-		_spiCache(SPICACHESIZE(rows,columns)),
-		_spiPadBits(SPICACHEPADBITS(rows,columns))
+		_screenBits(rows,columns*3),
+		_spi()
 {
-	_scanPass = 1;
-	_scanRow = 0;
-	_priorRow = rows-1;
+	_cycleCount = 0;
+	_scanPass = 0;
+	_scanRow = rows-1;
+	_priorRow = rows-2;
   
   	// sett everything off
   	shiftOutAllOff();
@@ -51,9 +52,9 @@ void RGBLEDMatrix::shiftOutAllOff() {
 	// shorter (less resistance)
 
 	// shift out any needed pad bits
-	_spiCache.shiftNLowBits(_spiPadBits);
-	_spiCache.shiftNLowBits(_columns*3);
-	_spiCache.shiftNHighBits(_rows);
+// 	_spiCache.shiftNLowBits(_spiPadBits);
+// 	_spiCache.shiftNLowBits(_columns*3);
+// 	_spiCache.shiftNHighBits(_rows);
 }
 
 #define MAX_SCAN_PASS_COUNT 8
@@ -84,57 +85,45 @@ inline int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
 
 void RGBLEDMatrix::shiftOutCurrentRow() {
 	
-	// shift out any needed pad bits
-	_spiCache.shiftNLowBits(_spiPadBits);
-	
-	bool rowNeedsPower = false;
-	for (int col = 0; col < _columns; col++) {
-		short rgbValue = _screen_data.pixel(_scanRow, col);
+	if (!_screenBits.isRowMemoized(_scanRow)) {
+		bool rowNeedsPower = false;
+		size_t colBitIdex = 0;
+		for (int col = 0; col < _columns; col++) {
+			short rgbValue = _screen_data.pixel(_scanRow, col);
 
-		// a form of Binary Code Modulation is used to control
-		// the LED intensity at variou levels.
+			// a form of Binary Code Modulation is used to control
+			// the LED intensity at variou levels.
 		
-		// red
-		short redValue = rgbValue & RED_MASK;
-		if (redValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(redValue) ) {
-			_spiCache.shiftOutBit(LOW);
-			rowNeedsPower = true;
+			// red
+			short redValue = rgbValue & RED_MASK;
+			if (redValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(redValue) ) {
+				_screenBits.setColumnControlBit(_scanRow,colBitIdex,true);
+				rowNeedsPower = true;
+			}
+			colBitIdex++;
+			
+			// green
+			short greenValue = rgbValue & GREEN_MASK;
+			if (greenValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(greenValue) ) {
+				_screenBits.setColumnControlBit(_scanRow,colBitIdex,true);
+				rowNeedsPower = true;
+			}
+			colBitIdex++;
+					
+			// blue
+			short blueValue = (rgbValue & BLUE_MASK);
+			if (blueValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(blueValue) ) {
+				_screenBits.setColumnControlBit(_scanRow,colBitIdex,true);
+				rowNeedsPower = true;
+			}
+			colBitIdex++;
+			
 		}
-		else {
-			_spiCache.shiftOutBit(HIGH);
-		}
-
-		// green
-		short greenValue = rgbValue & GREEN_MASK;
-		if (greenValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(greenValue) ) {
-			_spiCache.shiftOutBit(LOW);
-			rowNeedsPower = true;
-		}
-		else {
-			_spiCache.shiftOutBit(HIGH);
-		}
-
-		// blue
-		short blueValue = (rgbValue & BLUE_MASK);
-		if (blueValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(blueValue) ) {
-			_spiCache.shiftOutBit(LOW);
-			rowNeedsPower = true;
-		}
-		else {
-			_spiCache.shiftOutBit(HIGH);
-		}
+	
+		_screenBits.setRowControlBit(_scanRow,rowNeedsPower);
 	}
 	
-	// now write out the row bits
-	if (rowNeedsPower) {
-		// this code design is for speed. It reduces the if-checks
-		// within a loop
-		_spiCache.shiftNHighBits((_rows - 1) - _scanRow);
-		_spiCache.shiftOutBit(LOW);
-		_spiCache.shiftNHighBits(_scanRow);
-	} else {
-		_spiCache.shiftNHighBits(_rows);		
-	}
+	_screenBits.transmitRow(_scanRow,_spi);
 }
 void RGBLEDMatrix::action() {    
 	_priorRow = _scanRow;
@@ -144,6 +133,10 @@ void RGBLEDMatrix::action() {
 		_scanPass++;
 		if (_scanPass >= MAX_SCAN_PASS_COUNT) {
 			_scanPass = 1;
+			_cycleCount++;
+		}
+		if ( _scanPass == 1 || _scanPass == 2 || _scanPass == 5) {
+			_screenBits.reset();
 		}
 	}
 
@@ -152,6 +145,7 @@ void RGBLEDMatrix::action() {
 	if (_scanRow == 0 && _scanPass == 1 && !_drawingActive && _screen_buf.isDirty()) {
 		_screen_data.copy(_screen_buf);
 		_screen_buf.setNotDirty();
+		_screenBits.reset();
 	}
 
 	this->shiftOutCurrentRow();

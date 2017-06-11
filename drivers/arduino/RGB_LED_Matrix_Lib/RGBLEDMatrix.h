@@ -20,7 +20,8 @@
 #define __RGBLEDMATRIX_H__
 #include "TimerAction.h"
 #include "RGBImage.h"
-#include "SPIBitCache.h"
+#include "LEDMatrixBits.h"
+#include "SPIConnection.h"
 
 class RGBLEDMatrix : public TimerAction {
 private:
@@ -28,14 +29,15 @@ private:
 	int _columns;
 	RGBImage _screen_data;
 	RGBImage _screen_buf;
-
+	LEDMatrixBits _screenBits;
+	
+	int _cycleCount;
 	int _scanPass;
 	int _scanRow;
 	int _priorRow;
 	boolean _drawingActive;
 
-	SPIBitCache	_spiCache;
-	int _spiPadBits;
+	SPIConnection	_spi;
 	
 	static int maxScanCountForValue(unsigned char value);
 
