@@ -44,6 +44,7 @@ LEDMatrixBits::LEDMatrixBits(
 		_controlBitBytesPerRow(BYTES_FOR_ROW_CONTROL_BITS(rows,columns)),
 		_rowMemoized(new bool[rows])
 {
+	this->reset();
 }
 
 LEDMatrixBits::~LEDMatrixBits()
@@ -185,4 +186,31 @@ void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
 		dataPtr++;
 	}
 	conn.endTransaction();
+}
+
+void LEDMatrixBits::streamFrameToSerial(void) {
+	unsigned char* dataPtr = _data;
+	
+	for (int row = 0; row < this->rows(); row++) {
+		Serial.print(F("     "));
+		int bitCount = 0;
+		for (int i = 0; i < _controlBitBytesPerRow; i++) {
+		   for (unsigned char mask = 0x80; mask; mask >>= 1) {
+				if (mask & (*dataPtr)) {
+				   Serial.print('1');
+				}
+				else {
+				   Serial.print('0');
+				}
+				
+				// create seperation for row control bits
+				bitCount++;
+				if ( bitCount == this->columns() ) {
+					Serial.print(F("  "));
+				}	
+			}	
+			dataPtr++;
+		}
+		Serial.print(F("\n"));		
+	}
 }

@@ -45,6 +45,9 @@ public:
 	bool isRowMemoized(int row) const;
 	
 	void transmitRow(int row, SPIConnection& conn) const;
+	
+	// debug
+	void streamFrameToSerial(void);
 };
 
 #endif // __LEDMATRIXBITTS_H__

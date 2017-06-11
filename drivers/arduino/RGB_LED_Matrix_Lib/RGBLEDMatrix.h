@@ -28,21 +28,26 @@ private:
 	int _rows;
 	int _columns;
 	RGBImage _screen_data;
-	RGBImage _screen_buf;
-	LEDMatrixBits _screenBits;
 	
-	int _cycleCount;
+	LEDMatrixBits **_curScreenBitFrames;
+	LEDMatrixBits *_screenBitFrames[6];
+	bool _screenBigFrameToggle;
+	
 	int _scanPass;
 	int _scanRow;
-	int _priorRow;
 	boolean _drawingActive;
 
 	SPIConnection	_spi;
 	
-	static int maxScanCountForValue(unsigned char value);
-
-	void shiftOutAllOff();
-	void shiftOutCurrentRow();
+	void shiftOutRow( int row, int scanPass );
+	void setRowBitsForFrame(
+			int row,
+			size_t frame,
+			LEDMatrixBits* framePtr,
+			const RGBImage& image
+		);
+	void copyScreenDataToBits(const RGBImage& image);
+	size_t maxFrameCountForValue(unsigned char value);
 protected:
 	virtual void action();
 public:
@@ -53,8 +58,8 @@ public:
 			int columns
 		);
 
-	RGBImage& image(void)				{ return _screen_buf; }
-	const RGBImage& image(void) const	{ return _screen_buf; }
+	RGBImage& image(void)				{ return _screen_data; }
+	const RGBImage& image(void) const	{ return _screen_data; }
   
 
 	void startDrawing(void)   			{ _drawingActive = true; }
@@ -62,6 +67,11 @@ public:
 
 	int rows() const          			{ return _rows; }
 	int columns() const       			{ return _columns; }
+
+	void startScanning(void);
+	void stopScanning(void);
+
+	void shiftOutCurrentRow(void);
 
 };
 

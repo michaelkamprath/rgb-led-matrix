@@ -22,7 +22,11 @@
 #define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
 #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
 
+#define MAX_SCAN_PASS_COUNT 8
 const unsigned long UPDATE_INTERVAL = 300;
+
+RGBLEDMatrix* gSingleton = 0;
+unsigned int gtcnt2StartValue;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
@@ -31,34 +35,27 @@ RGBLEDMatrix::RGBLEDMatrix(
 		_rows(rows),
 		_columns(columns),
 		_screen_data(rows,columns),
-		_screen_buf(rows,columns),
-		_screenBits(rows,columns*3),
+		_screenBitFrames(),
 		_spi()
 {
-	_cycleCount = 0;
-	_scanPass = 0;
-	_scanRow = rows-1;
-	_priorRow = rows-2;
-  
-  	// sett everything off
-  	shiftOutAllOff();
+	if (gSingleton == nullptr) {
+		gSingleton = this;
+	}
+
+	_screenBitFrames[0] = new LEDMatrixBits(rows, columns*3);
+	_screenBitFrames[1] = new LEDMatrixBits(rows, columns*3);
+	_screenBitFrames[2] = new LEDMatrixBits(rows, columns*3);
+	_screenBitFrames[3] = new LEDMatrixBits(rows, columns*3);
+	_screenBitFrames[4] = new LEDMatrixBits(rows, columns*3);
+	_screenBitFrames[5] = new LEDMatrixBits(rows, columns*3);
+	_curScreenBitFrames = &_screenBitFrames[0];
+	_screenBigFrameToggle = false;
+	
+	_scanPass = 1;
+	_scanRow = 0;
 }
 
-void RGBLEDMatrix::shiftOutAllOff() {
-	// before scanning the first row, turn off the prior row completely. The prior row
-	// would be the bottom row on the matrix. If the switching transistor is slow,
-	// it would still be partially on when the first row is turned on causing the LEDs
-	// to glow slightly since the electrical path to the transistor transitioning off 
-	// shorter (less resistance)
-
-	// shift out any needed pad bits
-// 	_spiCache.shiftNLowBits(_spiPadBits);
-// 	_spiCache.shiftNLowBits(_columns*3);
-// 	_spiCache.shiftNHighBits(_rows);
-}
-
-#define MAX_SCAN_PASS_COUNT 8
-inline int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
+size_t RGBLEDMatrix::maxFrameCountForValue(unsigned char value) {
 	switch (value) {
 		case 0:
 			return 0;
@@ -71,82 +68,159 @@ inline int RGBLEDMatrix::maxScanCountForValue(unsigned char value) {
 		case B00100000:
 		case B00001000:
 		case B00000010:		
-			return 4;
+			return 2;
 			break;
 		case B00110000:
 		case B00001100:
 		case B00000011:		
 		default:
-			return MAX_SCAN_PASS_COUNT;
+			return 3;
 			break;
 	}
-
 }
 
-void RGBLEDMatrix::shiftOutCurrentRow() {
+void RGBLEDMatrix::copyScreenDataToBits(const RGBImage& image) {
+	size_t idxOffset = 0;
+	if (!_screenBigFrameToggle) {
+		idxOffset = 3;
+	}
+
+	_screenBitFrames[0+idxOffset]->reset();
+	_screenBitFrames[1+idxOffset]->reset();
+	_screenBitFrames[2+idxOffset]->reset();
+
+	for (int row = 0; row < this->rows(); row++) {
+		this->setRowBitsForFrame(row, 1, _screenBitFrames[0+idxOffset], image);
+		this->setRowBitsForFrame(row, 2, _screenBitFrames[1+idxOffset], image);
+		this->setRowBitsForFrame(row, 3, _screenBitFrames[1+idxOffset], image);
+	}
 	
-	if (!_screenBits.isRowMemoized(_scanRow)) {
+	noInterrupts(); // disable all interrupts
+	_screenBigFrameToggle = !_screenBigFrameToggle;
+	_curScreenBitFrames = &_screenBitFrames[0+idxOffset];
+	interrupts(); // enable all interrupts
+}
+
+void RGBLEDMatrix::setRowBitsForFrame(
+	int row,
+	size_t frame,
+	LEDMatrixBits* framePtr,
+	const RGBImage& image
+) {	
+	if (!framePtr->isRowMemoized(row)) {
 		bool rowNeedsPower = false;
 		size_t colBitIdex = 0;
 		for (int col = 0; col < _columns; col++) {
-			short rgbValue = _screen_data.pixel(_scanRow, col);
+			short rgbValue = image.pixel(row, col);
 
 			// a form of Binary Code Modulation is used to control
 			// the LED intensity at variou levels.
 		
 			// red
 			short redValue = rgbValue & RED_MASK;
-			if (redValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(redValue) ) {
-				_screenBits.setColumnControlBit(_scanRow,colBitIdex,true);
+			if (redValue && frame <= RGBLEDMatrix::maxFrameCountForValue(redValue) ) {
+				framePtr->setColumnControlBit(row,colBitIdex,true);
 				rowNeedsPower = true;
 			}
 			colBitIdex++;
 			
 			// green
 			short greenValue = rgbValue & GREEN_MASK;
-			if (greenValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(greenValue) ) {
-				_screenBits.setColumnControlBit(_scanRow,colBitIdex,true);
+			if (greenValue && frame <= RGBLEDMatrix::maxFrameCountForValue(greenValue) ) {
+				framePtr->setColumnControlBit(row,colBitIdex,true);
 				rowNeedsPower = true;
 			}
 			colBitIdex++;
 					
 			// blue
 			short blueValue = (rgbValue & BLUE_MASK);
-			if (blueValue && _scanPass <= RGBLEDMatrix::maxScanCountForValue(blueValue) ) {
-				_screenBits.setColumnControlBit(_scanRow,colBitIdex,true);
+			if (blueValue && frame <= RGBLEDMatrix::maxFrameCountForValue(blueValue) ) {
+				framePtr->setColumnControlBit(row,colBitIdex,true);
 				rowNeedsPower = true;
 			}
 			colBitIdex++;
 			
 		}
 	
-		_screenBits.setRowControlBit(_scanRow,rowNeedsPower);
-	}
-	
-	_screenBits.transmitRow(_scanRow,_spi);
+		framePtr->setRowControlBit(row,rowNeedsPower);
+	}	
 }
-void RGBLEDMatrix::action() {    
-	_priorRow = _scanRow;
+
+void RGBLEDMatrix::shiftOutRow( int row, int scanPass ) {
+	int frameIdx = 0;
+	if (scanPass > 4) {
+		frameIdx = 2;
+	} else if (scanPass > 1) {
+		frameIdx = 1;
+	}
+	_curScreenBitFrames[frameIdx]->transmitRow(row, _spi);
+}
+
+void RGBLEDMatrix::shiftOutCurrentRow( void ) {
+	this->shiftOutRow( _scanRow, _scanPass );
+	
 	_scanRow++;
-	if (_scanRow >= _rows) {
+	if (_scanRow >= this->rows()) {
 		_scanRow = 0;
 		_scanPass++;
 		if (_scanPass >= MAX_SCAN_PASS_COUNT) {
 			_scanPass = 1;
-			_cycleCount++;
 		}
-		if ( _scanPass == 1 || _scanPass == 2 || _scanPass == 5) {
-			_screenBits.reset();
-		}
-	}
+	}	
+}
 
+void RGBLEDMatrix::action() {    
 	// if this is row 0 for scan pass zero, copy the buffer 
 	// to the data space if dirty
-	if (_scanRow == 0 && _scanPass == 1 && !_drawingActive && _screen_buf.isDirty()) {
-		_screen_data.copy(_screen_buf);
-		_screen_buf.setNotDirty();
-		_screenBits.reset();
+	if (_scanRow == 0 && _scanPass == 1 && !_drawingActive && _screen_data.isDirty()) {
+	
+		this->copyScreenDataToBits(_screen_data);
+		_screen_data.setNotDirty();
 	}
+}
 
-	this->shiftOutCurrentRow();
+void RGBLEDMatrix::startScanning(void) {
+	noInterrupts(); // disable all interrupts
+	
+  	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
+
+	// SET timer2 to count up mode
+	TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
+	TCCR2B &= ~(1<<WGM22);
+
+	// set clock to I/O clock
+  	ASSR &= ~(1<<AS2);
+ 
+  	// overflow only mode
+  	TIMSK2 &= ~(1<<OCIE2A);
+  	
+  	// configure to fire about every 100us
+	TCCR2B |= (1<<CS22) | (1<<CS20); 
+	TCCR2B &= ~(1<<CS21);
+ 
+	/* We need to calculate a proper value to load the timer counter.
+	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
+	 * 100us / 8us = 12.5 --> 13.
+	 * MAX(uint8) + 1 - 13 = 244;
+	 */
+	gtcnt2StartValue = 244; 
+ 
+	// load counter start point and enable the timer
+	TCNT2 = gtcnt2StartValue;
+	TIMSK2 |= (1<<TOIE2);
+	
+  	interrupts(); // enable all interrupts
+}
+
+void stopScanning(void) {
+  	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
+}
+
+ISR(TIMER2_OVF_vect) {
+	noInterrupts(); 
+	// reload the timer
+	TCNT2 = gtcnt2StartValue;
+	// shift out next row
+	gSingleton->shiftOutCurrentRow();
+  	interrupts(); 
 }
