@@ -66,8 +66,8 @@ bool GlyphBase::getBit( int row, int column ) const {
 	}
 }
 
-RGBImage* GlyphBase::getImageWithColor( ColorType foreground, ColorType background ) const {
-	RGBImage* img = new RGBImage( this->rows(), this->columns() );
+MutableRGBImage* GlyphBase::getImageWithColor( ColorType foreground, ColorType background ) const {
+	MutableRGBImage* img = new MutableRGBImage( this->rows(), this->columns() );
 	
 	if (this->isProgMem()) {
 		// creating a PROGMEM version of the loops for speed: don't have to check if PROGRMEM

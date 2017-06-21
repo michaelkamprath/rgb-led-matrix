@@ -58,7 +58,7 @@ public:
 	
 	virtual bool getBit( int row, int column ) const;
 	
-	RGBImage* getImageWithColor(
+	MutableRGBImage* getImageWithColor(
 			ColorType foreground,
 			ColorType background = TRANSPARENT_COLOR
 		) const;

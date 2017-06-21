@@ -27,7 +27,7 @@ class RGBLEDMatrix : public TimerAction {
 private:
 	int _rows;
 	int _columns;
-	RGBImage _screen_data;
+	MutableRGBImage _screen_data;
 	
 	LEDMatrixBits **_curScreenBitFrames;
 	LEDMatrixBits *_screenBitFrames[6];
@@ -44,9 +44,9 @@ private:
 			int row,
 			size_t frame,
 			LEDMatrixBits* framePtr,
-			const RGBImage& image
+			const RGBImageBase& image
 		);
-	void copyScreenDataToBits(const RGBImage& image);
+	void copyScreenDataToBits(const RGBImageBase& image);
 	size_t maxFrameCountForValue(unsigned char value);
 protected:
 	virtual void action();
@@ -58,8 +58,8 @@ public:
 			int columns
 		);
 
-	RGBImage& image(void)				{ return _screen_data; }
-	const RGBImage& image(void) const	{ return _screen_data; }
+	MutableRGBImage& image(void)				{ return _screen_data; }
+	const MutableRGBImage& image(void) const	{ return _screen_data; }
   
 
 	void startDrawing(void)   			{ _drawingActive = true; }

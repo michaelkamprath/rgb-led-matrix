@@ -67,10 +67,51 @@ const static unsigned char GREEN_BIT_SHIFT = 2;
 const static unsigned char BLUE_MASK = 0x03;
 const static unsigned char BLUE_BIT_SHIFT = 0;
 
-class RGBImage {
+class RGBImageBase {
 private:
 	int _rows;
 	int _columns;
+
+public:
+	RGBImageBase(int rows, int columns);
+	RGBImageBase(const RGBImageBase& other);
+	virtual ~RGBImageBase();
+	
+	int rows(void) const		{ return _rows; }
+	int columns(void) const		{ return _columns; }
+	virtual bool isProgMem(void) const = 0;
+	virtual const ColorType* data(void) const = 0;
+
+	const ColorType pixel( int row, int column ) const;
+	
+};
+
+class RGBImage : public RGBImageBase {
+private:
+
+	const ColorType* _data;
+	int _dataSize;
+	bool _isProgMem;
+	bool _manageMem;
+
+public:
+
+	RGBImage(
+			int rows,
+			int columns,
+			const ColorType* data,
+			bool isFromProgramSpace = false
+		);
+	RGBImage(const RGBImageBase& other);
+	virtual ~RGBImage();
+
+	virtual bool isProgMem(void) const			{ return _isProgMem; }
+	virtual const ColorType* data(void) const	{ return _data; }
+
+};
+
+class MutableRGBImage : public RGBImageBase {
+private:
 	ColorType* _data;
 
 	int _dataSize;
@@ -78,29 +119,27 @@ private:
 	bool _dirty;
 
 public:
-	RGBImage(int rows, int columns);
-	RGBImage(
+	MutableRGBImage(int rows, int columns);
+	MutableRGBImage(
 			int rows,
 			int columns,
 			const ColorType* data,
 			bool isFromProgramSpace = false
 		);
-	RGBImage(const RGBImage& other);
-	virtual ~RGBImage();
+	MutableRGBImage(const RGBImageBase& other);
+	virtual ~MutableRGBImage();
 
-	int rows(void) const		{ return _rows; }
-	int columns(void) const		{ return _columns; }
+	virtual bool isProgMem(void) const		{ return false; }
+	virtual const ColorType* data(void) const	{ return _data; }
 
 	bool isDirty( void) const	{ return _dirty; }
 	void setNotDirty()			{ _dirty = false; }
 	
-	void copy(const RGBImage& other);
+	void copy(const RGBImageBase& other);
 
 	ColorType& pixel( int row, int column );
-	const ColorType& pixel( int row, int column ) const;
-	
-	
-	void placeImageAt( const RGBImage& image, int row, int column );
+		
+	void placeImageAt( const RGBImageBase& image, int row, int column );
 	void paintColor( ColorType color ); 
 	void drawLine(
 		int startRow,
@@ -125,6 +164,7 @@ public:
 			ColorType foreground,
 			ColorType background = TRANSPARENT_COLOR
 		);
+
 };
 
 #endif //__RGBIMAGE_H__

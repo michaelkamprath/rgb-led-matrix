@@ -82,7 +82,7 @@ size_t RGBLEDMatrix::maxFrameCountForValue(unsigned char value) {
 	}
 }
 
-void RGBLEDMatrix::copyScreenDataToBits(const RGBImage& image) {
+void RGBLEDMatrix::copyScreenDataToBits(const RGBImageBase& image) {
 	size_t idxOffset = 0;
 	if (!_screenBitFrameToggle) {
 		idxOffset = 3;
@@ -108,7 +108,7 @@ void RGBLEDMatrix::setRowBitsForFrame(
 	int row,
 	size_t frame,
 	LEDMatrixBits* framePtr,
-	const RGBImage& image
+	const RGBImageBase& image
 ) {	
 	if (!framePtr->isRowMemoized(row)) {
 		bool rowNeedsPower = false;

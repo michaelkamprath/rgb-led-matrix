@@ -133,7 +133,7 @@ GlyphSequenceAnimation::GlyphSequenceAnimation(
 {
 }
 		
-void GlyphSequenceAnimation::draw( RGBImage& buffer)
+void GlyphSequenceAnimation::draw( MutableRGBImage& buffer)
 {
 	int idx = this->getSequenceIndex();
 
@@ -176,7 +176,7 @@ ImageSequenceAnimation::ImageSequenceAnimation(
 }
 		
 
-void ImageSequenceAnimation::draw( RGBImage& buffer)
+void ImageSequenceAnimation::draw( MutableRGBImage& buffer)
 {
 	int idx = this->getSequenceIndex();
 
