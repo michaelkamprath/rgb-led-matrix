@@ -15,8 +15,9 @@
 // 
 //     You should have received a copy of the GNU General Public License
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
-#ifndef __UTILS_H__
-#define __UTILS_H__
+#include <Arduino.h>
+#include <avr/pgmspace.h>
+#include "RGBLEDMatrixUtils.h"
 
 
 void * memcpy_smart(
@@ -32,7 +33,3 @@ void * memcpy_smart(
 		return memcpy(dest, src, n);
 	}
 } 
-
-
-#endif
-

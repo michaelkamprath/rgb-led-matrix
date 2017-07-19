@@ -19,7 +19,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include "Glyph.h"
-#include "Utils.h"
+#include "RGBLEDMatrixUtils.h"
 
 // pre-calculate the bit masks to speed up over 1<<(7-bitIdx%8)
 const unsigned char BIT_MASKS[8] = {

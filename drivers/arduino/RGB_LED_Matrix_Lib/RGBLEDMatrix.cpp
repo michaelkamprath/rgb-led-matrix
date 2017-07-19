@@ -189,7 +189,7 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 			mulitplier = 3;
 			break;
 		case 3:
-			mulitplier = 5;
+			mulitplier = 8;
 			break;
 	}
 
