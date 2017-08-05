@@ -56,7 +56,7 @@ void RGBAnimationBase::update() {
 	_matrix.startDrawing();
 	this->draw(_matrix.image());
 	if (_rightPadSize > 0) {
-		int imgRightColumn = this->getOriginColumn() + this->columns();
+		int imgRightColumn = this->getOriginColumn() + _matrix.image().columns();
 		for (	int x = imgRightColumn >= 0 ? imgRightColumn : 0;
 				(x < _matrix.image().columns())&&(x < imgRightColumn + _rightPadSize);
 				x++ )
@@ -89,7 +89,7 @@ void RGBAnimationBase::update() {
 		}
 	}
 	if (_bottomPadSize > 0) {
-		int imgBottomRow = this->getOriginRow() + this->rows();
+		int imgBottomRow = this->getOriginRow() + _matrix.image().rows();
 		for (	int y = imgBottomRow >= 0 ? imgBottomRow : 0;
 				(y < _matrix.image().rows())&&(y < imgBottomRow + _bottomPadSize);
 				y++ )
@@ -137,10 +137,19 @@ void GlyphSequenceAnimation::draw( MutableRGBImage& buffer)
 {
 	int idx = this->getSequenceIndex();
 
-	buffer.drawGlyph(
-		*_frameArray[idx].glyph,
+	buffer.drawRectangle(
 		this->getOriginRow(),
 		this->getOriginColumn(),
+		this->getOriginRow() + buffer.rows() - 1,
+		this->getOriginColumn() + buffer.columns() - 1,
+		_frameArray[idx].background,
+		false
+	);
+			
+	buffer.drawGlyph(
+		*_frameArray[idx].glyph,
+		this->getOriginRow() + _frameArray[idx].row,
+		this->getOriginColumn() + _frameArray[idx].column,
 		_frameArray[idx].foreground,
 		_frameArray[idx].background
 	);
@@ -182,8 +191,8 @@ void ImageSequenceAnimation::draw( MutableRGBImage& buffer)
 
 	buffer.placeImageAt(
 		*_frameArray[idx].image,
-		this->getOriginRow(),
-		this->getOriginColumn()
+		this->getOriginRow() + _frameArray[idx].row,
+		this->getOriginColumn() + _frameArray[idx].column
 	);
 
 	// this function may be called multiple times in a given interval. Only

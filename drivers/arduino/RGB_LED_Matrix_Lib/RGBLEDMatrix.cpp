@@ -23,9 +23,9 @@
 #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
 
 #define MAX_SCAN_PASS_COUNT 3
-#define BASE_SCAN_TIMER_INTERVALS 13
+#define BASE_SCAN_TIMER_INTERVALS 8
 
-const unsigned long UPDATE_INTERVAL = 300;
+const unsigned long UPDATE_INTERVAL = 100;
 
 RGBLEDMatrix* gSingleton = 0;
 

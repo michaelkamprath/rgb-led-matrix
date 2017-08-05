@@ -144,12 +144,14 @@ Glyph a4d(8, 8, invader4D, true);
 GlyphSequenceAnimation::Frame ani1[2] = {
   {
     &a1a,
+    0, 0,
     500,
     B00001000,
     BLACK_COLOR
   },
   {
     &a1b,
+    0, 0,
     500,
     B00001000,
     BLACK_COLOR
@@ -160,12 +162,14 @@ GlyphSequenceAnimation::Frame ani1[2] = {
 GlyphSequenceAnimation::Frame ani2[2] = {
   {
     &a2a,
+    0, 0,
     500,
     B00100000,
     BLACK_COLOR
   },
   {
     &a2b,
+    0, 0,
     500,
     B00100000,
     BLACK_COLOR
@@ -176,12 +180,14 @@ GlyphSequenceAnimation::Frame ani2[2] = {
 GlyphSequenceAnimation::Frame ani3[2] = {
   {
     &a3a,
+    0, 0,
     500,
     B00100100,
     BLACK_COLOR
   },
   {
     &a3b,
+    0, 0,
     500,
     B00100100,
     BLACK_COLOR
@@ -192,24 +198,28 @@ GlyphSequenceAnimation::Frame ani3[2] = {
 GlyphSequenceAnimation::Frame ani4[4] = {
   {
     &a4a,
+    0, 0,
     250,
     B00000010,
     BLACK_COLOR
   },
   {
     &a4b,
+    0, 0,
     250,
     B00000010,
     BLACK_COLOR
   },
   {
     &a4c,
+    0, 0,
     250,
     B00000010,
     BLACK_COLOR
   },
   {
     &a4d,
+    0, 0,
     250,
     B00000010,
     BLACK_COLOR

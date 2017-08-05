@@ -91,6 +91,8 @@ class GlyphSequenceAnimation : public RGBAnimationBase {
 public:
 	struct Frame {
 		const Glyph* glyph;
+		int row;
+		int column;
 		unsigned long interval;
 		ColorType foreground;
 		ColorType background;
@@ -120,6 +122,8 @@ class ImageSequenceAnimation : public RGBAnimationBase {
 public:
 	struct Frame {
 		const RGBImageBase* image;
+		int row;
+		int column;
 		unsigned long interval;
 	};
 

@@ -243,18 +243,25 @@ void MutableRGBImage::drawRectangle(
   		bool fill
   	)
 {
-	if ( tlRow > brRow || tlColumn > brColumn ) {
+	if ( tlRow > brRow || tlColumn > brColumn 
+		|| tlRow >= this->rows() || brRow < 0 
+		|| tlColumn >= this->columns() || brColumn < 0) {
 		return;
 	}
 	
 	_dirty = true;
-	for (int row = tlRow; row <= brRow; row++ ) {
-		if ( fill || row == tlRow || row == brRow ) {
-			memset(&this->pixel(row,tlColumn),color,brColumn-tlColumn+1);
+	int finalTLRow = min(max(0,tlRow),this->rows()-1);
+	int finalBRRow = min(max(0,brRow),this->rows()-1);
+	int finalTLColumn = min(max(0,tlColumn),this->columns()-1);
+	int finalBRColumn = min(max(0,brColumn),this->columns()-1);
+	
+	for (int row = finalTLRow; row <= finalBRRow; row++ ) {
+		if ( fill || row == finalTLRow || row == finalBRRow ) {
+			memset(&this->pixel(row,finalTLColumn),color,finalBRColumn-finalTLColumn+1);
 		}
 		else {
-			this->pixel(row,tlColumn) = color;
-			this->pixel(row,brColumn) = color;
+			this->pixel(row,finalTLColumn) = color;
+			this->pixel(row,finalBRColumn) = color;
 		}
 	}
 }
