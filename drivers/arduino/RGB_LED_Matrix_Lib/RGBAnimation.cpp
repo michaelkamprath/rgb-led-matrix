@@ -143,7 +143,7 @@ void GlyphSequenceAnimation::draw( MutableRGBImage& buffer)
 		this->getOriginRow() + buffer.rows() - 1,
 		this->getOriginColumn() + buffer.columns() - 1,
 		_frameArray[idx].background,
-		false
+		true
 	);
 			
 	buffer.drawGlyph(
@@ -187,7 +187,7 @@ void ImageSequenceAnimation::draw( MutableRGBImage& buffer)
 		this->getOriginRow() + buffer.rows() - 1,
 		this->getOriginColumn() + buffer.columns() - 1,
 		BLACK_COLOR,
-		false
+		true
 	);
 
 	buffer.placeImageAt(
