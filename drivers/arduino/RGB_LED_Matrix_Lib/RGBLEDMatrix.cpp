@@ -170,7 +170,7 @@ void RGBLEDMatrix::shiftOutCurrentRow( void ) {
 void RGBLEDMatrix::action() {    
 	// if this is row 0 for scan pass zero, copy the buffer 
 	// to the data space if dirty
-	if (_scanRow == 0 && _scanPass == 1 && !_drawingActive && _screen_data.isDirty()) {
+	if (_scanRow == 0 && _scanPass == 1 && !this->isDrawing() && _screen_data.isDirty()) {
 	
 		this->copyScreenDataToBits(_screen_data);
 		_screen_data.setNotDirty();

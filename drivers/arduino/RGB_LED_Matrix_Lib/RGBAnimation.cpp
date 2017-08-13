@@ -162,14 +162,6 @@ void GlyphSequenceAnimation::draw( MutableRGBImage& buffer)
 	_lastDrawnSequenceIdx = idx;
 }
 
-int GlyphSequenceAnimation::rows() const
-{
-	return _frameArray[0].glyph->rows();
-}
-int GlyphSequenceAnimation::columns() const
-{
-	return _frameArray[0].glyph->columns();
-}
 
 #pragma mark - ImageSequenceAnimation
 
@@ -189,6 +181,15 @@ void ImageSequenceAnimation::draw( MutableRGBImage& buffer)
 {
 	int idx = this->getSequenceIndex();
 
+	buffer.drawRectangle(
+		this->getOriginRow(),
+		this->getOriginColumn(),
+		this->getOriginRow() + buffer.rows() - 1,
+		this->getOriginColumn() + buffer.columns() - 1,
+		BLACK_COLOR,
+		false
+	);
+
 	buffer.placeImageAt(
 		*_frameArray[idx].image,
 		this->getOriginRow() + _frameArray[idx].row,
@@ -201,14 +202,5 @@ void ImageSequenceAnimation::draw( MutableRGBImage& buffer)
 		this->setIntervalMillis(_frameArray[idx].interval);
 	}
 	_lastDrawnSequenceIdx = idx;
-}
-
-int ImageSequenceAnimation::rows() const
-{
-	return _frameArray[0].image->rows();
-}
-int ImageSequenceAnimation::columns() const
-{
-	return _frameArray[0].image->columns();
 }
 

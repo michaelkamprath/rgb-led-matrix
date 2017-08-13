@@ -20,9 +20,9 @@
 #define __RGBANIMATION_H__
 #include "TimerAction.h"
 #include "RGBImage.h"
+#include "RGBLEDMatrix.h"
 
 class Glyph;
-class RGBLEDMatrix;
 
 class RGBAnimationBase : public TimerAction {
 
@@ -78,8 +78,8 @@ public:
 		return nextIdx;
 	}
 
-	virtual int rows() const = 0;
-	virtual int columns() const = 0;
+	int rows() const						{ return _matrix.rows(); }
+	int columns() const						{ return _matrix.columns(); }
 	
 	void setRightPad( int padSize, ColorType padColor = BLACK_COLOR );
 	void setLeftPad( int padSize, ColorType padColor = BLACK_COLOR );
@@ -113,9 +113,6 @@ public:
 			const Frame* frameArray,
 			int	frameArraySize
 	);
-
-	virtual int rows() const;
-	virtual int columns() const;
 };
 
 class ImageSequenceAnimation : public RGBAnimationBase {
@@ -142,9 +139,6 @@ public:
 			const ImageSequenceAnimation::Frame* frameArray,
 			int	frameArraySize
 	);
-
-	virtual int rows() const;
-	virtual int columns() const;
 };
 
 

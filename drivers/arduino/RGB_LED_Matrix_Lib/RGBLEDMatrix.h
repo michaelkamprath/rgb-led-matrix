@@ -35,7 +35,7 @@ private:
 	
 	int _scanPass;
 	int _scanRow;
-	boolean _drawingActive;
+	int _isDrawingCount;
 
 	SPIConnection	_spi;
 	
@@ -62,9 +62,10 @@ public:
 	const MutableRGBImage& image(void) const	{ return _screen_data; }
   
 
-	void startDrawing(void)   			{ _drawingActive = true; }
-	void stopDrawing(void)    			{ _drawingActive = false; }
-
+	void startDrawing(void)   			{ _isDrawingCount++; }
+	void stopDrawing(void)    			{ _isDrawingCount--; if (_isDrawingCount < 0) { _isDrawingCount = 0; }}
+	bool isDrawing(void) const			{ return (_isDrawingCount > 0); }
+	
 	int rows() const          			{ return _rows; }
 	int columns() const       			{ return _columns; }
 

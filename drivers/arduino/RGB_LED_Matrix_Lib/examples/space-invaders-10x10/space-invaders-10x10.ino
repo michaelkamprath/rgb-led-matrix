@@ -234,63 +234,63 @@ RGBAnimationSequence::AnimationItem aniItems[ANIMATION_ITEMS_SIZE] {
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_LEFT,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani1, 2 ),
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_DOWN,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani2, 2 ),
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_RIGHT,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani2, 2 ),
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_DOWN,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani3, 2 ),
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_LEFT,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani3, 2 ),
     4000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_DOWN,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani4, 4 ),
     6000,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_UP,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani3, 2 ),
     0,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_UP,
-    4
+    2
   },
   {
     new GlyphSequenceAnimation( leds, ani2, 2 ),
     0,
     2000,
     RGBAnimationSequence::TRANSITION_SLIDE_UP,
-    4
+    2
   },
   
 };
