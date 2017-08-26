@@ -74,6 +74,7 @@ public:
 
 	void shiftOutCurrentRow(void);
 	unsigned int nextTimerInterval(void) const;
+	void incrementScanRow( void );
 };
 
 #endif //__SCREEN_H__

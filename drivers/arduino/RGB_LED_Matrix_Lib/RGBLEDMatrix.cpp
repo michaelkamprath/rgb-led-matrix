@@ -25,7 +25,7 @@
 #define MAX_SCAN_PASS_COUNT 3
 #define BASE_SCAN_TIMER_INTERVALS 8
 
-const unsigned long UPDATE_INTERVAL = 100;
+const unsigned long UPDATE_INTERVAL = 2000;
 
 RGBLEDMatrix* gSingleton = 0;
 
@@ -155,26 +155,29 @@ void RGBLEDMatrix::shiftOutRow( int row, int scanPass ) {
 
 void RGBLEDMatrix::shiftOutCurrentRow( void ) {
 	this->shiftOutRow( _scanRow, _scanPass );
-	
+}
+
+void RGBLEDMatrix::incrementScanRow( void ) {	
 	_scanRow++;
 	if (_scanRow >= this->rows()) {
 		_scanRow = 0;
 		_scanPass++;
 		if (_scanPass > MAX_SCAN_PASS_COUNT) {
 			_scanPass = 1;
-			cycleCount++;
 		}
-	}	
+	}
 }
+
 
 void RGBLEDMatrix::action() {    
 	// if this is row 0 for scan pass zero, copy the buffer 
 	// to the data space if dirty
-	if (_scanRow == 0 && _scanPass == 1 && !this->isDrawing() && _screen_data.isDirty()) {
-	
-		this->copyScreenDataToBits(_screen_data);
-		_screen_data.setNotDirty();
-	}
+	if (!this->isDrawing() ) {
+		if (_screen_data.isDirty()) {
+			this->copyScreenDataToBits(_screen_data);
+			_screen_data.setNotDirty();
+		}
+	} 
 }
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
@@ -234,4 +237,7 @@ ISR(TIMER2_OVF_vect) {
 	// reload the timer
 	TCNT2 = gSingleton->nextTimerInterval();
   	interrupts(); 
+  	// update scan row. Done outside of interrupt stoppage since execution time can
+  	// be inconsistent, which would lead to vary brightness in rows.
+  	gSingleton->incrementScanRow();
 }
