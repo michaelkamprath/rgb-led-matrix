@@ -200,6 +200,40 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
 }
 
+#if defined(__arm__) && defined(TEENSYDUINO)
+//
+// On the Teensy ARM boards, use the TimerThree library to drive scan timing
+//
+#include <TimerThree.h>
+
+void time3InteruptHandler( void ) {
+	Timer3.stop();
+	gSingleton->shiftOutCurrentRow();
+	// reload the timer
+	Timer3.setPeriod(gSingleton->nextTimerInterval());
+  	Timer3.start(); 
+  	// update scan row. Done outside of interrupt stoppage since execution time can
+  	// be inconsistent, which would lead to vary brightness in rows.
+  	gSingleton->incrementScanRow();
+	
+}
+
+void RGBLEDMatrix::startScanning(void) {
+	Timer3.initialize(this->nextTimerInterval());
+	Timer3.attachInterrupt(time3InteruptHandler);
+	Timer3.start();
+}
+
+void stopScanning(void) {
+	Timer3.stop();
+	Timer3.detachInterrupt();
+}
+
+#else
+//
+// On normal Arduino board (Uno, Nano, etc), use the timer interrupts to drive the
+// scan timing. 
+//
 void RGBLEDMatrix::startScanning(void) {
 	noInterrupts(); // disable all interrupts
 	
@@ -241,3 +275,4 @@ ISR(TIMER2_OVF_vect) {
   	// be inconsistent, which would lead to vary brightness in rows.
   	gSingleton->incrementScanRow();
 }
+#endif
