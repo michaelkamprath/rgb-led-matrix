@@ -1,4 +1,13 @@
+#######################################
+# Syntax Coloring Map For RGB_LED_Matrix_Lib
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
 ColorType			KEYWORD1
+Frame				KEYWORD1
 Glyph				KEYWORD1
 GlyphBase			KEYWORD1
 GlyphSequenceAnimation	KEYWORD1
@@ -15,6 +24,16 @@ RGBLEDMatrixUtils	KEYWORD1
 SPIBitCache			KEYWORD1
 SPIConnection		KEYWORD1
 TimerAction			KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+memcpy_smart		KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
 
 AQUA_COLOR			LITERAL1
 BLACK_COLOR			LITERAL1

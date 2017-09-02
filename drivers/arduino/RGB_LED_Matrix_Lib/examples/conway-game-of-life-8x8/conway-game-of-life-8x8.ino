@@ -63,10 +63,10 @@ public:
 CellUniverse::CellUniverse(
     RGBLEDMatrix& matrix,
     unsigned long updateMicros
-) :   _leds(matrix),
+) :   TimerAction(updateMicros),
+      _leds(matrix),
       _cells(new LifeState[matrix.rows()*matrix.columns()]),
-      _nextCells(new LifeState[matrix.rows()*matrix.columns()]),
-      TimerAction(updateMicros)
+      _nextCells(new LifeState[matrix.rows()*matrix.columns()])
 {
   memset(_cells,DEAD,matrix.rows()*matrix.columns()*sizeof(LifeState));
   memset(_nextCells,DEAD,matrix.rows()*matrix.columns()*sizeof(LifeState));

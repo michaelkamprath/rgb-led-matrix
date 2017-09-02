@@ -56,8 +56,8 @@ LEDMatrixBits::LEDMatrixBits(
 	size_t columns
 )	: 	_dataByteCount((BYTES_FOR_ROW_CONTROL_BITS(rows,columns))*rows),
 		_data(new unsigned char[BYTES_FOR_ROW_CONTROL_BITS(rows,columns)*rows]),
-		_rows(rows),
 		_columns(columns),
+		_rows(rows),
 		_controlBitBytesPerRow(BYTES_FOR_ROW_CONTROL_BITS(rows,columns)),
 		_rowMemoized(new bool[rows])
 {
@@ -198,7 +198,7 @@ void LEDMatrixBits::setColumnControlBit( size_t row, size_t column, bool isOn ) 
 void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
 	unsigned char *dataPtr = _data + _controlBitBytesPerRow*row;
 	conn.startTransaction();
-	for (int i = 0; i < _controlBitBytesPerRow; i++ ) {
+	for (size_t i = 0; i < _controlBitBytesPerRow; i++ ) {
 		conn.transmitByte(*dataPtr);
 		dataPtr++;
 	}
@@ -208,10 +208,10 @@ void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
 void LEDMatrixBits::streamFrameToSerial(void) {
 	unsigned char* dataPtr = _data;
 	
-	for (int row = 0; row < this->rows(); row++) {
+	for (size_t row = 0; row < this->rows(); row++) {
 		Serial.print(F("     "));
-		int bitCount = 0;
-		for (int i = 0; i < _controlBitBytesPerRow; i++) {
+		size_t bitCount = 0;
+		for (size_t i = 0; i < _controlBitBytesPerRow; i++) {
 		   for (unsigned char mask = 0x80; mask; mask >>= 1) {
 				if (mask & (*dataPtr)) {
 				   Serial.print('1');

@@ -49,8 +49,8 @@ public:
 
 	void reset(void);
 	
-	int rows(void) const		{ return _rows; }
-	int columns(void) const		{ return _columns; }
+	size_t rows(void) const			{ return _rows; }
+	size_t columns(void) const		{ return _columns; }
 	
 	void setAllOff(void);
 	void setColumnControlBit( size_t row, size_t column, bool isOn );
