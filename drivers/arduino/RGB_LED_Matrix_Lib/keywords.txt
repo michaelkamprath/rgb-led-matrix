@@ -15,6 +15,7 @@ ImageSequenceAnimation	KEYWORD1
 LEDMatrixBits		KEYWORD1
 MutableGlyph		KEYWORD1
 MutableRGBImage		KEYWORD1
+RGBAnimation		KEYWORD1
 RGBAnimationBase	KEYWORD1
 RGBAnimationSequence	KEYWORD1
 RGBImage			KEYWORD1
