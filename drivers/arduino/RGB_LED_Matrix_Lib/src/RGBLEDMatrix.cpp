@@ -180,25 +180,6 @@ void RGBLEDMatrix::action() {
 	} 
 }
 
-unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	/* We need to calculate a proper value to load the timer counter.
-	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
-	 * 100us / 8us = 12.5 --> 13.
-	 * MAX(uint8) + 1 - 13 = 244;
-	 */
-	int mulitplier = 1;
-	switch (_scanPass) {
-		case 2:
-			mulitplier = 3;
-			break;
-		case 3:
-			mulitplier = 8;
-			break;
-	}
-
-
-	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
-}
 
 #if defined(__arm__) && defined(TEENSYDUINO)
 //
@@ -227,6 +208,21 @@ void RGBLEDMatrix::startScanning(void) {
 void stopScanning(void) {
 	Timer3.stop();
 	Timer3.detachInterrupt();
+}
+
+unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
+	// Calculates the microseconds for each scan
+	int mulitplier = 1;
+	switch (_scanPass) {
+		case 2:
+			mulitplier = 3;
+			break;
+		case 3:
+			mulitplier = 8;
+			break;
+	}
+
+	return  10*mulitplier;
 }
 
 #else
@@ -263,6 +259,27 @@ void RGBLEDMatrix::startScanning(void) {
 void stopScanning(void) {
   	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
 }
+
+unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
+	/* We need to calculate a proper value to load the timer counter.
+	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
+	 * 100us / 8us = 12.5 --> 13.
+	 * MAX(uint8) + 1 - 13 = 244;
+	 */
+	int mulitplier = 1;
+	switch (_scanPass) {
+		case 2:
+			mulitplier = 3;
+			break;
+		case 3:
+			mulitplier = 8;
+			break;
+	}
+
+
+	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
+}
+
 
 ISR(TIMER2_OVF_vect) {
 	noInterrupts(); 
