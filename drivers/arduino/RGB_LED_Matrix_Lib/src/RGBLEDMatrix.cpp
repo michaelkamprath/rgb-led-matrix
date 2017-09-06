@@ -19,11 +19,8 @@
 #include <Arduino.h>
 #include "RGBLEDMatrix.h"
 
-#define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
-#define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
-
-#define MAX_SCAN_PASS_COUNT 3
-#define BASE_SCAN_TIMER_INTERVALS 8
+// #define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
+// #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
 
 const unsigned long UPDATE_INTERVAL = 2000;
 
@@ -38,27 +35,112 @@ RGBLEDMatrix::RGBLEDMatrix(
 		_rows(rows),
 		_columns(columns),
 		_screen_data(rows,columns),
+		_curScreenBitFrames(NULL),
 		_screenBitFrames(),
+		_screenBitFrameToggle(false),
+		_scanPass(1),
+		_scanRow(0),
+		_isDrawingCount(0),
 		_spi()
 {
 	if (gSingleton == nullptr) {
 		gSingleton = this;
 	}
 
-	_screenBitFrames[0] = new LEDMatrixBits(rows, columns*3);
-	_screenBitFrames[1] = new LEDMatrixBits(rows, columns*3);
-	_screenBitFrames[2] = new LEDMatrixBits(rows, columns*3);
-	_screenBitFrames[3] = new LEDMatrixBits(rows, columns*3);
-	_screenBitFrames[4] = new LEDMatrixBits(rows, columns*3);
-	_screenBitFrames[5] = new LEDMatrixBits(rows, columns*3);
-	_curScreenBitFrames = &_screenBitFrames[0];
-	_screenBitFrameToggle = false;
+	for (int i = 0; i < 2*MAX_SCAN_PASS_COUNT; i++) {
+		_screenBitFrames[i] = new LEDMatrixBits(rows, columns*3);
+	}
 	
-	_scanPass = 1;
-	_scanRow = 0;
+	_curScreenBitFrames = &_screenBitFrames[0];
 }
 
-size_t RGBLEDMatrix::maxFrameCountForValue(unsigned char value) {
+size_t RGBLEDMatrix::maxFrameCountForValue(ColorType value) {
+#if TWENTY_FOUR_BIT_COLOR
+	switch (value) {
+		case 0:
+			return 0;
+			break;
+		case 0x0100:
+		case 0x0010:
+		case 0x0001:
+			return 1;
+			break;
+		case 0x0200:
+		case 0x0020:
+		case 0x0002:
+			return 2;
+			break;
+		case 0x0300:
+		case 0x0030:
+		case 0x0003:
+			return 3;
+			break;
+		case 0x0400:
+		case 0x0040:
+		case 0x0004:
+			return 4;
+			break;
+		case 0x0500:
+		case 0x0050:
+		case 0x0005:
+			return 5;
+			break;
+		case 0x0600:
+		case 0x0060:
+		case 0x0006:
+			return 6;
+			break;
+		case 0x0700:
+		case 0x0070:
+		case 0x0007:
+			return 7;
+			break;
+		case 0x0800:
+		case 0x0080:
+		case 0x0008:
+			return 8;
+			break;
+		case 0x0900:
+		case 0x0090:
+		case 0x0009:
+			return 9;
+			break;
+		case 0x0A00:
+		case 0x00A0:
+		case 0x000A:
+			return 10;
+			break;
+		case 0x0B00:
+		case 0x00B0:
+		case 0x000B:
+			return 11;
+			break;
+		case 0x0C00:
+		case 0x00C0:
+		case 0x000C:
+			return 12;
+			break;
+		case 0x0D00:
+		case 0x00D0:
+		case 0x000D:
+			return 13;
+			break;
+		case 0x0E00:
+		case 0x00E0:
+		case 0x000E:
+			return 14;
+			break;
+		case 0x0F00:
+		case 0x00F0:
+		case 0x000F:
+			return 15;
+			break;
+		default:
+			return MAX_SCAN_PASS_COUNT;
+			break;
+	}
+#else
+	// we expect only on of the 4 bit sets in the value to be on
 	switch (value) {
 		case 0:
 			return 0;
@@ -80,28 +162,7 @@ size_t RGBLEDMatrix::maxFrameCountForValue(unsigned char value) {
 			return MAX_SCAN_PASS_COUNT;
 			break;
 	}
-}
-
-void RGBLEDMatrix::copyScreenDataToBits(const RGBImageBase& image) {
-	size_t idxOffset = 0;
-	if (!_screenBitFrameToggle) {
-		idxOffset = 3;
-	}
-
-	_screenBitFrames[0+idxOffset]->reset();
-	_screenBitFrames[1+idxOffset]->reset();
-	_screenBitFrames[2+idxOffset]->reset();
-
-	for (int row = 0; row < this->rows(); row++) {
-		this->setRowBitsForFrame(row, 1, _screenBitFrames[0+idxOffset], image);
-		this->setRowBitsForFrame(row, 2, _screenBitFrames[1+idxOffset], image);
-		this->setRowBitsForFrame(row, 3, _screenBitFrames[2+idxOffset], image);
-	}
-	
-	noInterrupts(); // disable all interrupts
-	_screenBitFrameToggle = !_screenBitFrameToggle;
-	_curScreenBitFrames = &_screenBitFrames[0+idxOffset];
-	interrupts(); // enable all interrupts
+#endif
 }
 
 void RGBLEDMatrix::setRowBitsForFrame(
@@ -114,13 +175,13 @@ void RGBLEDMatrix::setRowBitsForFrame(
 		bool rowNeedsPower = false;
 		size_t colBitIdex = 0;
 		for (int col = 0; col < _columns; col++) {
-			short rgbValue = image.pixel(row, col);
+			ColorType rgbValue = image.pixel(row, col);
 
 			// a form of Binary Code Modulation is used to control
 			// the LED intensity at variou levels.
 		
 			// red
-			short redValue = rgbValue & RED_MASK;
+			ColorType redValue = rgbValue & RED_MASK;
 			if (redValue && frame <= RGBLEDMatrix::maxFrameCountForValue(redValue) ) {
 				framePtr->setColumnControlBit(row,colBitIdex,true);
 				rowNeedsPower = true;
@@ -128,7 +189,7 @@ void RGBLEDMatrix::setRowBitsForFrame(
 			colBitIdex++;
 			
 			// green
-			short greenValue = rgbValue & GREEN_MASK;
+			ColorType greenValue = rgbValue & GREEN_MASK;
 			if (greenValue && frame <= RGBLEDMatrix::maxFrameCountForValue(greenValue) ) {
 				framePtr->setColumnControlBit(row,colBitIdex,true);
 				rowNeedsPower = true;
@@ -136,36 +197,21 @@ void RGBLEDMatrix::setRowBitsForFrame(
 			colBitIdex++;
 					
 			// blue
-			short blueValue = (rgbValue & BLUE_MASK);
+			ColorType blueValue = (rgbValue & BLUE_MASK);
 			if (blueValue && frame <= RGBLEDMatrix::maxFrameCountForValue(blueValue) ) {
 				framePtr->setColumnControlBit(row,colBitIdex,true);
 				rowNeedsPower = true;
 			}
 			colBitIdex++;
 			
-		}
-	
+		}		
 		framePtr->setRowControlBit(row,rowNeedsPower);
 	}	
 }
 
-void RGBLEDMatrix::shiftOutRow( int row, int scanPass ) {
-	_curScreenBitFrames[scanPass-1]->transmitRow(row, _spi);
-}
 
 void RGBLEDMatrix::shiftOutCurrentRow( void ) {
 	this->shiftOutRow( _scanRow, _scanPass );
-}
-
-void RGBLEDMatrix::incrementScanRow( void ) {	
-	_scanRow++;
-	if (_scanRow >= this->rows()) {
-		_scanRow = 0;
-		_scanPass++;
-		if (_scanPass > MAX_SCAN_PASS_COUNT) {
-			_scanPass = 1;
-		}
-	}
 }
 
 
@@ -178,6 +224,44 @@ void RGBLEDMatrix::action() {
 			_screen_data.setNotDirty();
 		}
 	} 
+}
+
+
+void RGBLEDMatrix::copyScreenDataToBits(const RGBImageBase& image) {
+	size_t idxOffset = 0;
+	if (!_screenBitFrameToggle) {
+		idxOffset = MAX_SCAN_PASS_COUNT;
+	}
+
+	for (int i = 0; i < MAX_SCAN_PASS_COUNT; i++) {
+		_screenBitFrames[i+idxOffset]->reset();		
+	}
+
+	for (int row = 0; row < this->rows(); row++) {
+		for (int i = 0;  i < MAX_SCAN_PASS_COUNT; i++) {
+			this->setRowBitsForFrame(row, i+1, _screenBitFrames[i+idxOffset], image);
+		}
+	}
+	
+	noInterrupts(); // disable all interrupts
+	_screenBitFrameToggle = !_screenBitFrameToggle;
+	_curScreenBitFrames = &_screenBitFrames[0+idxOffset];
+	interrupts(); // enable all interrupts
+}
+
+void RGBLEDMatrix::shiftOutRow( int row, int scanPass ) {
+	_curScreenBitFrames[scanPass-1]->transmitRow(row, _spi);
+}
+
+void RGBLEDMatrix::incrementScanRow( void ) {	
+	_scanRow++;
+	if (_scanRow >= this->rows()) {
+		_scanRow = 0;
+		_scanPass++;
+		if (_scanPass > MAX_SCAN_PASS_COUNT) {
+			_scanPass = 1;
+		}
+	}
 }
 
 
@@ -212,17 +296,9 @@ void stopScanning(void) {
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	// Calculates the microseconds for each scan
-	int mulitplier = 1;
-	switch (_scanPass) {
-		case 2:
-			mulitplier = 3;
-			break;
-		case 3:
-			mulitplier = 8;
-			break;
-	}
-
-	return  10*mulitplier;
+	int mulitplier = _scanPass*1.25;	
+	
+	return  5*mulitplier;
 }
 
 #else
@@ -230,6 +306,9 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 // On normal Arduino board (Uno, Nano, etc), use the timer interrupts to drive the
 // scan timing. 
 //
+
+#define BASE_SCAN_TIMER_INTERVALS 12
+
 void RGBLEDMatrix::startScanning(void) {
 	noInterrupts(); // disable all interrupts
 	
@@ -267,6 +346,7 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	 * MAX(uint8) + 1 - 13 = 244;
 	 */
 	int mulitplier = 1;
+#if !TWENTY_FOUR_BIT_COLOR
 	switch (_scanPass) {
 		case 2:
 			mulitplier = 3;
@@ -275,7 +355,7 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 			mulitplier = 8;
 			break;
 	}
-
+#endif
 
 	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
 }

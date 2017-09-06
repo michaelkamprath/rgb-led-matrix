@@ -19,10 +19,14 @@ protected:
       for (int y = 0; y < _screen->columns(); ++y ) {
         ColorType color = 0;
         if ( x == _xStack[4] && y == _yStack[4] ) {
-          color = B00000001;
+          color = DARK_BLUE_COLOR;
         }
         if ( x == _xStack[3] && y == _yStack[3] ) {
+#if TWENTY_FOUR_BIT_COLOR
+          color = 0x0009;
+#else
           color = B00000010;
+#endif
         }
         if ( x == _xStack[2] && y == _yStack[2] ) {
           color = BLUE_COLOR;

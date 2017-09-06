@@ -23,6 +23,12 @@
 #include "LEDMatrixBits.h"
 #include "SPIConnection.h"
 
+#if TWENTY_FOUR_BIT_COLOR
+#define MAX_SCAN_PASS_COUNT 15
+#else
+#define MAX_SCAN_PASS_COUNT 3
+#endif
+
 class RGBLEDMatrix : public TimerAction {
 private:
 	int _rows;
@@ -30,7 +36,7 @@ private:
 	MutableRGBImage _screen_data;
 	
 	LEDMatrixBits **_curScreenBitFrames;
-	LEDMatrixBits *_screenBitFrames[6];
+	LEDMatrixBits *_screenBitFrames[2*MAX_SCAN_PASS_COUNT];
 	bool _screenBitFrameToggle;
 	
 	int _scanPass;
@@ -39,6 +45,7 @@ private:
 
 	SPIConnection	_spi;
 	
+	void copyScreenDataToBits(const RGBImageBase& image);	
 	void shiftOutRow( int row, int scanPass );
 	void setRowBitsForFrame(
 			int row,
@@ -46,8 +53,7 @@ private:
 			LEDMatrixBits* framePtr,
 			const RGBImageBase& image
 		);
-	void copyScreenDataToBits(const RGBImageBase& image);
-	size_t maxFrameCountForValue(unsigned char value);
+	size_t maxFrameCountForValue(ColorType value);
 protected:
 	virtual void action();
 public:

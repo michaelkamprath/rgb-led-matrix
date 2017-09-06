@@ -138,6 +138,11 @@ void LEDMatrixBits::setRowControlBit( size_t row, bool isOn ) {
 	_rowMemoized[row] = true;
 }
 
+void LEDMatrixBits::unMemoizeRow(int row) {
+	_rowMemoized[row] = false;
+}
+
+
 void LEDMatrixBits::setNBitsTo( size_t startBit, size_t numBits, unsigned char highOrLow ) {
 	size_t startByteIdx = startBit/8;
 	unsigned char *dataPtr = _data + startByteIdx;

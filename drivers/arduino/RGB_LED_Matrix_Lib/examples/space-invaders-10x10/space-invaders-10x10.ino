@@ -146,14 +146,14 @@ GlyphSequenceAnimation::Frame ani1[2] = {
     &a1a,
     1, 1,
     500,
-    B00001000,
+    DARK_GREEN_COLOR,
     BLACK_COLOR
   },
   {
     &a1b,
     1, 1,
     500,
-    B00001000,
+    DARK_GREEN_COLOR,
     BLACK_COLOR
   },
 };
@@ -164,14 +164,14 @@ GlyphSequenceAnimation::Frame ani2[2] = {
     &a2a,
     1, 1,
     500,
-    B00100000,
+    RED_COLOR,
     BLACK_COLOR
   },
   {
     &a2b,
     1, 1,
     500,
-    B00100000,
+    RED_COLOR,
     BLACK_COLOR
   },
 };
@@ -182,14 +182,14 @@ GlyphSequenceAnimation::Frame ani3[2] = {
     &a3a,
     1, 1,
     500,
-    B00100100,
+    ORANGE_COLOR,
     BLACK_COLOR
   },
   {
     &a3b,
     1, 1,
     500,
-    B00100100,
+    ORANGE_COLOR,
     BLACK_COLOR
   },
 };
@@ -200,28 +200,28 @@ GlyphSequenceAnimation::Frame ani4[4] = {
     &a4a,
     1, 1,
     250,
-    B00000010,
+    BLUE_COLOR,
     BLACK_COLOR
   },
   {
     &a4b,
     1, 1,
     250,
-    B00000010,
+    BLUE_COLOR,
     BLACK_COLOR
   },
   {
     &a4c,
     1, 1,
     250,
-    B00000010,
+    BLUE_COLOR,
     BLACK_COLOR
   },
   {
     &a4d,
     1, 1,
     250,
-    B00000010,
+    BLUE_COLOR,
     BLACK_COLOR
   }
 };

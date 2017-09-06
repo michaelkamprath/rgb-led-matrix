@@ -57,6 +57,7 @@ public:
 	void setRowControlBit( size_t row, bool isOn );
 	
 	bool isRowMemoized(int row) const;
+	void unMemoizeRow(int row);
 	
 	void transmitRow(int row, SPIConnection& conn) const;
 	
