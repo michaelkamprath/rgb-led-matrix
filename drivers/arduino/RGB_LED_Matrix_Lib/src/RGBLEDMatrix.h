@@ -29,8 +29,22 @@
 #define MAX_SCAN_PASS_COUNT 3
 #endif
 
+
 class RGBLEDMatrix : public TimerAction {
+public:
+	typedef enum {
+		// Each individual LED's RGB bits are consecutive in column order.
+		// For a 4-column matrix, each row is ordered: RGB-RGB-RGB-RGB
+		INDIVIDUAL_LEDS,	
+		
+		// All elements of the same color are consecutive in column order. The color
+		// are order Red, Green Blue
+		// For a 4-column matrix, each row is ordered: RRRR-GGGG-BBBB
+		RGB_GROUPS
+	} RGBLEDBitLayout;
+
 private:
+	const RGBLEDBitLayout _bitLayout;
 	int _rows;
 	int _columns;
 	MutableRGBImage _screen_data;
@@ -61,7 +75,8 @@ public:
 
 	RGBLEDMatrix(
 			int rows,
-			int columns
+			int columns,
+			RGBLEDBitLayout bitLayout = INDIVIDUAL_LEDS
 		);
 
 	MutableRGBImage& image(void)				{ return _screen_data; }

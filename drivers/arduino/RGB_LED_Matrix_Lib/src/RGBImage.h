@@ -19,7 +19,7 @@
 #define __RGBIMAGE12BIT_H__
 
 #ifndef TWENTY_FOUR_BIT_COLOR
-#define TWENTY_FOUR_BIT_COLOR 0
+#define TWENTY_FOUR_BIT_COLOR defined(__arm__) && defined(TEENSYDUINO)
 #endif
 /***
 

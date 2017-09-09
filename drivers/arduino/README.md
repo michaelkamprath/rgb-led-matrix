@@ -29,3 +29,17 @@ To use the RGB LED Matrices designed in this project, you must convert the Teens
 ![Teensy 3.6 Circuit to Drive RGB LED Matrix](docs/teensy36_5V_logic_circuit.png)
 
 An alternative to using this 74HCT125 circuit would be to replace the 74HC595 shift registers on the RGB LED Matrix with the 74HCT595 variety. However, this might be more expensive.
+
+## Color Modes
+This driver can support either 6-bit or 24-bit color. By default, this library uses 6-bit color. You can enable 24 bit color in this library by setting the preprocessor macro `TWENTY_FOUR_BIT_COLOR` to a value of 1 (note, not in your `ino` file, but at compile time for all files). You can do this either by editing the `RGBImage.h` file or setting a compiler flag. However, note that 24 bit color requires more RAM than an Arduino Uno or Nano has. 24 bit color has been test to work on a Teensy 3.6 board.
+
+## Bit Layouts
+This driver can support two different bit layouts. The default bit layout assumes each RGB LED is a single unit and each column is wired up with the RGB bits consecutively.  That is, for a 4x4 matrix, the bit layout would look like this:
+
+![Default Bit Layout for RGB LED Matrix](docs/rgb-led-matrix-bit-layout-default.png)
+
+The second supported bit layout groups all colors together in column order, then sends each color group in Red-Green-Blue order. For a 4x4 matrix, the bit layout would look like this:
+
+![Default Bit Layout for RGB LED Matrix](docs/rgb-led-matrix-bit-layout-color-groups.png)
+
+When constructing the the `RGBLEDMatrix` object, the third argument is optional and it take a `RGBLEDBitLayout` enum value indicating which bit layout you are using. This argument defaults to `INDIVIDUAL_LEDS`, which is the first layout described above. The other potential value is `RGB_GROUPS`.

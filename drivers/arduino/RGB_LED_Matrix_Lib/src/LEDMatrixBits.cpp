@@ -179,7 +179,7 @@ void LEDMatrixBits::setNBitsTo( size_t startBit, size_t numBits, unsigned char h
 		}
 		
 		if (dataPtr >= 	_data + _dataByteCount) {
-			// thou shalt now buffer overflow
+			// thou shalt not buffer overflow
 			return;
 		}
 	}	

@@ -30,8 +30,10 @@ long int cycleCount = 0;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
-	int columns
+	int columns,
+	RGBLEDBitLayout bitLayout
 ) :		TimerAction(UPDATE_INTERVAL),
+		_bitLayout(bitLayout),
 		_rows(rows),
 		_columns(columns),
 		_screen_data(rows,columns),
@@ -173,36 +175,44 @@ void RGBLEDMatrix::setRowBitsForFrame(
 ) {	
 	if (!framePtr->isRowMemoized(row)) {
 		bool rowNeedsPower = false;
-		size_t colBitIdex = 0;
+		size_t colBitIdx = 0;
+		size_t redBitOffset = 0;
+		size_t greenBitOffset = 1;
+		size_t blueBitOffset = 2;
+		size_t columnBitIdxIncrement = 3;
+		if (_bitLayout == RGB_GROUPS) {
+			redBitOffset = 0;
+			greenBitOffset = this->columns();
+			blueBitOffset = 2*this->columns();
+			columnBitIdxIncrement = 1;
+		}
 		for (int col = 0; col < _columns; col++) {
 			ColorType rgbValue = image.pixel(row, col);
-
+			
 			// a form of Binary Code Modulation is used to control
 			// the LED intensity at variou levels.
 		
 			// red
 			ColorType redValue = rgbValue & RED_MASK;
 			if (redValue && frame <= RGBLEDMatrix::maxFrameCountForValue(redValue) ) {
-				framePtr->setColumnControlBit(row,colBitIdex,true);
+				framePtr->setColumnControlBit(row,colBitIdx+redBitOffset,true);
 				rowNeedsPower = true;
 			}
-			colBitIdex++;
 			
 			// green
 			ColorType greenValue = rgbValue & GREEN_MASK;
 			if (greenValue && frame <= RGBLEDMatrix::maxFrameCountForValue(greenValue) ) {
-				framePtr->setColumnControlBit(row,colBitIdex,true);
+				framePtr->setColumnControlBit(row,colBitIdx+greenBitOffset,true);
 				rowNeedsPower = true;
 			}
-			colBitIdex++;
 					
 			// blue
 			ColorType blueValue = (rgbValue & BLUE_MASK);
 			if (blueValue && frame <= RGBLEDMatrix::maxFrameCountForValue(blueValue) ) {
-				framePtr->setColumnControlBit(row,colBitIdex,true);
+				framePtr->setColumnControlBit(row,colBitIdx+blueBitOffset,true);
 				rowNeedsPower = true;
 			}
-			colBitIdex++;
+			colBitIdx += columnBitIdxIncrement;
 			
 		}		
 		framePtr->setRowControlBit(row,rowNeedsPower);
