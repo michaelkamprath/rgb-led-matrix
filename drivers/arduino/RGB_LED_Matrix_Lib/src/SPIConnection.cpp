@@ -23,17 +23,20 @@ SPIConnection::SPIConnection(
 	int slavePin
 )	:	_slavePin(slavePin)
 {
-	pinMode (_slavePin, OUTPUT);
-	SPI.begin();
 }
 
 SPIConnection::~SPIConnection()
 {
 	SPI.end();
 }
-	
+
+void SPIConnection::setup() {
+	pinMode (_slavePin, OUTPUT);
+	SPI.begin();
+}
+
 void SPIConnection::startTransaction(void) {
-	SPI.beginTransaction(SPISettings(16000000, MSBFIRST, SPI_MODE0));
+	SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE0));
 	digitalWrite (_slavePin, LOW);
 }
 

@@ -19,7 +19,7 @@
 #define __RGBIMAGE12BIT_H__
 
 #ifndef TWENTY_FOUR_BIT_COLOR
-#define TWENTY_FOUR_BIT_COLOR defined(__arm__) && defined(TEENSYDUINO)
+#define TWENTY_FOUR_BIT_COLOR (defined(__arm__) && defined(TEENSYDUINO))
 #endif
 /***
 
@@ -106,7 +106,7 @@ const ColorType GRAY_COLOR = 0x2A;
 const ColorType GREEN_COLOR = 0x0C;
 const ColorType LIME_COLOR = 0x2D;
 const ColorType MAGENTA_COLOR = 0x33;
-const ColorType ORANGE_COLOR = 0x34;
+const ColorType ORANGE_COLOR = 0x38;
 const ColorType PINK_COLOR = 0x26;
 const ColorType PURPLE_COLOR = B00010001;
 const ColorType RED_COLOR = 0x30;

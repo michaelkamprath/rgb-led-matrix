@@ -27,6 +27,8 @@ public:
 		);
 	virtual ~SPIConnection();
 	
+	void setup();
+	
 	void startTransaction(void);
 	void transmitByte(unsigned char data);
 	void endTransaction(void);

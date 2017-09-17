@@ -47,7 +47,7 @@ private:
 	const RGBLEDBitLayout _bitLayout;
 	int _rows;
 	int _columns;
-	MutableRGBImage _screen_data;
+	MutableRGBImage *_screen_data;
 	
 	LEDMatrixBits **_curScreenBitFrames;
 	LEDMatrixBits *_screenBitFrames[2*MAX_SCAN_PASS_COUNT];
@@ -76,11 +76,15 @@ public:
 	RGBLEDMatrix(
 			int rows,
 			int columns,
+			int slavePin = 10,			
 			RGBLEDBitLayout bitLayout = INDIVIDUAL_LEDS
 		);
-
-	MutableRGBImage& image(void)				{ return _screen_data; }
-	const MutableRGBImage& image(void) const	{ return _screen_data; }
+	virtual ~RGBLEDMatrix();
+	
+	void setup();
+	
+	MutableRGBImage& image(void)				{ return *_screen_data; }
+	const MutableRGBImage& image(void) const	{ return *_screen_data; }
   
 
 	void startDrawing(void)   			{ _isDrawingCount++; }

@@ -24,36 +24,55 @@
 
 const unsigned long UPDATE_INTERVAL = 2000;
 
-RGBLEDMatrix* gSingleton = 0;
-
-long int cycleCount = 0;
+RGBLEDMatrix* gSingleton = NULL;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
 	int columns,
+	int slavePin,
 	RGBLEDBitLayout bitLayout
 ) :		TimerAction(UPDATE_INTERVAL),
 		_bitLayout(bitLayout),
 		_rows(rows),
 		_columns(columns),
-		_screen_data(rows,columns),
+		_screen_data(NULL),
 		_curScreenBitFrames(NULL),
 		_screenBitFrames(),
 		_screenBitFrameToggle(false),
 		_scanPass(1),
 		_scanRow(0),
 		_isDrawingCount(0),
-		_spi()
+		_spi(slavePin)
 {
-	if (gSingleton == nullptr) {
-		gSingleton = this;
-	}
 
-	for (int i = 0; i < 2*MAX_SCAN_PASS_COUNT; i++) {
-		_screenBitFrames[i] = new LEDMatrixBits(rows, columns*3);
-	}
+}
+
+void RGBLEDMatrix::setup() {
+	if (_screen_data == NULL) {
+		_screen_data = new MutableRGBImage(this->rows(), this->columns());
+		
+		for (int i = 0; i < 2*MAX_SCAN_PASS_COUNT; i++) {
+			_screenBitFrames[i] = new LEDMatrixBits(this->rows(), this->columns()*3);
+		}
 	
-	_curScreenBitFrames = &_screenBitFrames[0];
+		_curScreenBitFrames = &_screenBitFrames[0];
+
+		if (gSingleton == nullptr) {
+			gSingleton = this;
+		}
+		
+		_spi.setup();
+	}
+}
+
+RGBLEDMatrix::~RGBLEDMatrix() {
+	if (_screen_data != NULL) {
+		delete _screen_data;
+		for (int i = 0; i < 2*MAX_SCAN_PASS_COUNT; i++) {
+			delete _screenBitFrames[i];
+		}
+		_curScreenBitFrames = NULL;
+	}
 }
 
 size_t RGBLEDMatrix::maxFrameCountForValue(ColorType value) {
@@ -229,9 +248,9 @@ void RGBLEDMatrix::action() {
 	// if this is row 0 for scan pass zero, copy the buffer 
 	// to the data space if dirty
 	if (!this->isDrawing() ) {
-		if (_screen_data.isDirty()) {
-			this->copyScreenDataToBits(_screen_data);
-			_screen_data.setNotDirty();
+		if (this->image().isDirty()) {
+			this->copyScreenDataToBits(this->image());
+			this->image().setNotDirty();
 		}
 	} 
 }
@@ -275,7 +294,7 @@ void RGBLEDMatrix::incrementScanRow( void ) {
 }
 
 
-#if defined(__arm__) && defined(TEENSYDUINO)
+#if (defined(__arm__) && defined(TEENSYDUINO))
 //
 // On the Teensy ARM boards, use the TimerThree library to drive scan timing
 //
@@ -294,6 +313,8 @@ void time3InteruptHandler( void ) {
 }
 
 void RGBLEDMatrix::startScanning(void) {
+	this->setup();
+	
 	Timer3.initialize(this->nextTimerInterval());
 	Timer3.attachInterrupt(time3InteruptHandler);
 	Timer3.start();
@@ -311,6 +332,9 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	return  5*mulitplier;
 }
 
+#elif defined(ARDUINO_SAMD_ZERO)||defined(_SAM3XA_)
+// no timer code for the Due or Zero yet
+
 #else
 //
 // On normal Arduino board (Uno, Nano, etc), use the timer interrupts to drive the
@@ -320,6 +344,8 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 #define BASE_SCAN_TIMER_INTERVALS 12
 
 void RGBLEDMatrix::startScanning(void) {
+	this->setup();
+
 	noInterrupts(); // disable all interrupts
 	
   	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
@@ -334,10 +360,11 @@ void RGBLEDMatrix::startScanning(void) {
   	// overflow only mode
   	TIMSK2 &= ~(1<<OCIE2A);
   	
-  	// configure to fire about every 100us
-	TCCR2B |= (1<<CS22) | (1<<CS20); 
+  	// configure to fire about every 5 micro-second 
+	TCCR2B |= (1<<CS22) ; 
+	TCCR2B &= ~(1<<CS20);
 	TCCR2B &= ~(1<<CS21);
-  
+
 	// load counter start point and enable the timer
 	TCNT2 = this->nextTimerInterval();
 	TIMSK2 |= (1<<TOIE2);
@@ -356,7 +383,12 @@ unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	 * MAX(uint8) + 1 - 13 = 244;
 	 */
 	int mulitplier = 1;
-#if !TWENTY_FOUR_BIT_COLOR
+#if TWENTY_FOUR_BIT_COLOR
+	mulitplier = _scanPass/4;
+	if (mulitplier == 0) {
+		mulitplier = 1;
+	}
+#else
 	switch (_scanPass) {
 		case 2:
 			mulitplier = 3;
