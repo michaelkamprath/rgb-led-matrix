@@ -33,9 +33,10 @@ To use this Teensy 3.x driver in the Arduino IDE, add the folder `RGB_LED_Matrix
 
 
 ## Color Modes
-This driver can support either 6-bit or 24-bit color. By default, this library uses 6-bit color. You can enable 24 bit color in this library by setting the preprocessor macro `TWENTY_FOUR_BIT_COLOR` to a value of 1 (note, not in your `ino` file, but at compile time for all files). You can do this either by editing the `RGBImage.h` file or setting a compiler flag. However, note that 24 bit color requires more RAM than an Arduino Uno or Nano has, and more CPU cycles than what most 16 MHz board (again, the Uno or Nano) afford. Due its memory requirements and CPU speed requirements, 24 bit color should work on most 32 bit boards. 24 bit color has been tested to work on the following boards:
+This driver can support either 6-bit or 24-bit color. By default, this library uses 6-bit color. You can enable 24 bit color in this library by setting the preprocessor macro `TWENTY_FOUR_BIT_COLOR` to a value of 1 (note, not in your `ino` file, but at compile time for all files). You can do this either by editing the `RGBImage.h` file or setting a compiler flag. However, note that 24 bit color requires more RAM than an Arduino Uno or Nano has. Due its memory requirements, 24 bit color should work on most 32 bit boards and the Arduino Mega 2560. 24 bit color has been tested to work on the following boards:
 
 * Teensy 3.6 
+* Arduino Mega 2560
 
 ## Bit Layouts
 This driver can support two different bit layouts. The default bit layout assumes each RGB LED is a single unit and each column is wired up with the RGB bits consecutively.  That is, for a 4x4 matrix, the bit layout would look like this:

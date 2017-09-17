@@ -377,17 +377,9 @@ void stopScanning(void) {
 }
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	/* We need to calculate a proper value to load the timer counter.
-	 * (CPU frequency) / (prescaler value) = 125000 Hz = 8us.
-	 * 100us / 8us = 12.5 --> 13.
-	 * MAX(uint8) + 1 - 13 = 244;
-	 */
 	int mulitplier = 1;
 #if TWENTY_FOUR_BIT_COLOR
-	mulitplier = _scanPass/4;
-	if (mulitplier == 0) {
-		mulitplier = 1;
-	}
+	mulitplier = _scanPass/4+1;
 #else
 	switch (_scanPass) {
 		case 2:
