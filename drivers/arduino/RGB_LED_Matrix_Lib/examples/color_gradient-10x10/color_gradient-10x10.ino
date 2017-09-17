@@ -9,8 +9,7 @@
 // This program will cause a diagonal rainbow gradient to cycle through on the LED matrix
 // Will work in either 6-bit or 24-bit color. 
 //
-
-RGBLEDMatrix leds(10,10);
+#define LOOP_COUNTER_MAX 8000
 
 const int ROW_COLOR_LIST_SIZE = 19;
 ColorType rowColors[ROW_COLOR_LIST_SIZE];
@@ -35,7 +34,7 @@ ColorType colorSequence[SEQUENCE_LENGTH] = {
 };
 
 // This is the list of step values needed to transition to the next color.
-ColorType colorIncrements[SEQUENCE_LENGTH] = {
+unsigned int colorIncrements[SEQUENCE_LENGTH] = {
     greenIncrement,
     redIncrement,
     blueIncrement,
@@ -91,6 +90,8 @@ ColorType getNextColor() {
   return currentColor;
 }
 
+RGBLEDMatrix* leds;
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -98,30 +99,32 @@ void setup() {
     rowColors[i] = getNextColor();
   }
 
-  leds.image().paintColor(BLACK_COLOR);
-  leds.startScanning();
+  leds = new RGBLEDMatrix(10,10);
+  leds->setup();
+  leds->image().paintColor(BLACK_COLOR);
+  leds->startScanning();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if (loopCounter == 200000) {
+  if (loopCounter == LOOP_COUNTER_MAX) {
     for (int i = 0; i < ROW_COLOR_LIST_SIZE - 1; ++i) {
       rowColors[i] = rowColors[i+1];
     }
     
     rowColors[ROW_COLOR_LIST_SIZE-1] = getNextColor();  
     
-    leds.startDrawing();    
+    leds->startDrawing();    
     for (int i = 0; i < ROW_COLOR_LIST_SIZE; i++ ) {
       // determine if we are in the upper or lower diagonal
-      if (i/leds.rows() == 0) {
-        leds.image().drawLine(i,0,0,i,rowColors[i]);
+      if (i/leds->rows() == 0) {
+        leds->image().drawLine(i,0,0,i,rowColors[i]);
       }
       else {
-        leds.image().drawLine(leds.rows()-1,i%leds.rows() + 1,i%leds.rows() + 1,leds.columns()-1,rowColors[i]);
+        leds->image().drawLine(leds->rows()-1,i%leds->rows() + 1,i%leds->rows() + 1,leds->columns()-1,rowColors[i]);
       }
     }   
-    leds.stopDrawing();
+    leds->stopDrawing();
     
     loopCounter = 0;
   }
@@ -129,5 +132,5 @@ void loop() {
     loopCounter++;
   }
 
-  leds.loop();
+  leds->loop();
 }
