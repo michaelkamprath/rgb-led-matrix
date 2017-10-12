@@ -17,7 +17,11 @@
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <Arduino.h>
-#include <avr/pgmspace.h>
+#if defined ( ESP8266 )
+  #include <pgmspace.h>
+#else
+  #include <avr/pgmspace.h>
+#endif
 #include "Glyph.h"
 #include "RGBLEDMatrixUtils.h"
 
