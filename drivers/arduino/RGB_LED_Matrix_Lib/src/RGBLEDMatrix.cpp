@@ -293,6 +293,24 @@ void RGBLEDMatrix::incrementScanRow( void ) {
 	}
 }
 
+// Number of 5 microsecond units
+static unsigned int multiplier5microseconds( int scanPass ) {
+	int mulitplier = 1;
+#if TWENTY_FOUR_BIT_COLOR
+	mulitplier = scanPass/4+1;
+#else
+	switch (scanPass) {
+		case 2:
+			mulitplier = 3;
+			break;
+		case 3:
+			mulitplier = 8;
+			break;
+	}
+#endif
+
+	return  mulitplier;
+}
 
 #if (defined(__arm__) && defined(TEENSYDUINO))
 //
@@ -327,9 +345,45 @@ void stopScanning(void) {
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	// Calculates the microseconds for each scan
-	int mulitplier = _scanPass*1.25;	
 	
-	return  5*mulitplier;
+	return  5*multiplier5microseconds( _scanPass );
+}
+
+
+#elif defined ( ESP8266 )
+
+//
+// On the ESP8266 boards, use the timer0 to drive scan timing
+// Use D5 (GPIO14) as CLK and D7 (CPIO13) as SER
+//
+
+void inline timer0InteruptHandler (void){
+	gSingleton->shiftOutCurrentRow();
+	// reload the timer
+ 	timer0_write(ESP.getCycleCount() + 84 * gSingleton->nextTimerInterval());
+  	// update scan row. Done outside of interrupt stoppage since execution time can
+  	// be inconsistent, which would lead to vary brightness in rows.
+  	gSingleton->incrementScanRow();
+}
+
+void RGBLEDMatrix::startScanning(void) {
+	this->setup();
+	
+	noInterrupts();
+	timer0_isr_init();
+	timer0_attachInterrupt(timer0InteruptHandler);
+ 	timer0_write(ESP.getCycleCount() + 84 * gSingleton->nextTimerInterval());
+	interrupts();
+}
+
+void stopScanning(void) {
+	timer0_detachInterrupt;
+}
+
+unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
+	// Calculates the microseconds for each scan
+
+	return  5*multiplier5microseconds( _scanPass );
 }
 
 #elif defined(ARDUINO_SAMD_ZERO)||defined(_SAM3XA_)
@@ -377,21 +431,7 @@ void stopScanning(void) {
 }
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	int mulitplier = 1;
-#if TWENTY_FOUR_BIT_COLOR
-	mulitplier = _scanPass/4+1;
-#else
-	switch (_scanPass) {
-		case 2:
-			mulitplier = 3;
-			break;
-		case 3:
-			mulitplier = 8;
-			break;
-	}
-#endif
-
-	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
+	return  max(257-multiplier5microseconds( _scanPass )*BASE_SCAN_TIMER_INTERVALS, 0 );
 }
 
 
