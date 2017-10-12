@@ -293,6 +293,23 @@ void RGBLEDMatrix::incrementScanRow( void ) {
 	}
 }
 
+inline unsigned int multiplier5microseconds( int scanPass ) const {
+	int mulitplier = 1;
+#if TWENTY_FOUR_BIT_COLOR
+	mulitplier = scanPass/4+1;
+#else
+	switch (scanPass) {
+		case 2:
+			mulitplier = 3;
+			break;
+		case 3:
+			mulitplier = 8;
+			break;
+	}
+#endif
+
+	return  mulitplier;
+}
 
 #if (defined(__arm__) && defined(TEENSYDUINO))
 //
@@ -327,7 +344,7 @@ void stopScanning(void) {
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
 	// Calculates the microseconds for each scan
-	int mulitplier = _scanPass*1.25;	
+	int mulitplier = multiplier5microseconds( _scanPass );	
 	
 	return  5*mulitplier;
 }
@@ -377,21 +394,7 @@ void stopScanning(void) {
 }
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	int mulitplier = 1;
-#if TWENTY_FOUR_BIT_COLOR
-	mulitplier = _scanPass/4+1;
-#else
-	switch (_scanPass) {
-		case 2:
-			mulitplier = 3;
-			break;
-		case 3:
-			mulitplier = 8;
-			break;
-	}
-#endif
-
-	return  max(257-mulitplier*BASE_SCAN_TIMER_INTERVALS, 0 );
+	return  max(257-multiplier5microseconds( _scanPass )*BASE_SCAN_TIMER_INTERVALS, 0 );
 }
 
 
