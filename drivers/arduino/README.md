@@ -47,4 +47,4 @@ The second supported bit layout groups all colors together in column order, then
 
 ![Default Bit Layout for RGB LED Matrix](docs/rgb-led-matrix-bit-layout-color-groups.png)
 
-When constructing the the `RGBLEDMatrix` object, the third argument is optional and it take a `RGBLEDBitLayout` enum value indicating which bit layout you are using. This argument defaults to `INDIVIDUAL_LEDS`, which is the first layout described above. The other potential value is `RGB_GROUPS`.
+When constructing the the `RGBLEDMatrix` object, the fourth argument is optional and it take a `RGBLEDBitLayout` enum value indicating which bit layout you are using. This argument defaults to `INDIVIDUAL_LEDS`, which is the first layout described above. The other potential value is `RGB_GROUPS`.

@@ -338,7 +338,7 @@ void RGBLEDMatrix::startScanning(void) {
 	Timer3.start();
 }
 
-void stopScanning(void) {
+void RGBLEDMatrix::stopScanning(void) {
 	Timer3.stop();
 	Timer3.detachInterrupt();
 }
@@ -376,8 +376,8 @@ void RGBLEDMatrix::startScanning(void) {
 	interrupts();
 }
 
-void stopScanning(void) {
-	timer0_detachInterrupt;
+void RGBLEDMatrix::stopScanning(void) {
+	timer0_detachInterrupt();
 }
 
 unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
@@ -426,7 +426,7 @@ void RGBLEDMatrix::startScanning(void) {
   	interrupts(); // enable all interrupts
 }
 
-void stopScanning(void) {
+void RGBLEDMatrix::stopScanning(void) {
   	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
 }
 
