@@ -29,8 +29,6 @@
 
 const unsigned long UPDATE_INTERVAL = 2000;
 
-static RGBLEDMatrix* gSingleton = NULL;
-
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
 	int columns,
@@ -75,7 +73,7 @@ void RGBLEDMatrix::matrixHasBeenUpdated(void) {
 }
 
 void RGBLEDMatrix::generateFrameBits(LEDMatrixBits& frameBits, size_t frame ) const {
-	for (int row = 0; row < this->rows(); row++) {
+	for (unsigned int row = 0; row < this->rows(); row++) {
 		this->setRowBitsForFrame(row, frame, frameBits, *_screen_data);
 	}
 }
@@ -210,7 +208,7 @@ void RGBLEDMatrix::setRowBitsForFrame(
 			blueBitOffset = 2*this->columns();
 			columnBitIdxIncrement = 1;
 		}
-		for (int col = 0; col < this->columns(); col++) {
+		for (unsigned int col = 0; col < this->columns(); col++) {
 			ColorType rgbValue = image.pixel(row, col);
 			
 			// a form of Binary Code Modulation is used to control

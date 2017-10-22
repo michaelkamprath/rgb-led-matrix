@@ -123,10 +123,9 @@ bool* GlyphBase::generateBitBoolArray(
 }
 
 void GlyphBase::streamFrameToSerial(void) {
-	for (size_t row = 0; row < this->rows(); row++) {
+	for (int row = 0; row < this->rows(); row++) {
 		Serial.print(F("     "));
-		size_t bitCount = 0;
-		for (size_t i = 0; i < this->columns(); i++) {
+		for (int i = 0; i < this->columns(); i++) {
 			if (this->getBit(row, i)) {
 			   Serial.print('1');
 			}

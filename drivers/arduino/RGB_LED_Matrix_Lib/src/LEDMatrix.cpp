@@ -63,7 +63,7 @@ void LEDMatrix::matrixHasBeenUpdated(void) {
 }
 
 void LEDMatrix::generateFrameBits(LEDMatrixBits& frameBits, size_t frame ) const {
-	for (int row = 0; row < this->rows(); row++) {
+	for (unsigned int row = 0; row < this->rows(); row++) {
 		this->setRowBitsForFrame(row, frame, frameBits, *_screen_data);
 	}
 }
@@ -77,7 +77,7 @@ void LEDMatrix::setRowBitsForFrame(
 	if (!frameBits.isRowMemoized(row)) {
 		bool rowNeedsPower = false;
 		size_t colBitIdx = 0;
-		for (int col = 0; col < this->columns(); col++) {
+		for (unsigned int col = 0; col < this->columns(); col++) {
 			bool isOn = image.getBit(row, col);
 			
 			if (isOn) {
