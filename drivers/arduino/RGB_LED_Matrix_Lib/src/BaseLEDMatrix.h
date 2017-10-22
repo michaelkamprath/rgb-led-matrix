@@ -1,4 +1,4 @@
-//     RGB Matrix Project - RGBLEDMatrix
+//     RGB Matrix Project - BaseLEDMatrix
 //     Copyright (C) 2017 Michael Kamprath
 //
 //     This file is part of RGB Matrix Project.
