@@ -34,6 +34,8 @@ private:
 	size_t _columns;
 	size_t _rows;
 	size_t _controlBitBytesPerRow;
+	bool _columnControlBitOn;
+	bool _rowControlBitOn;
 	
 	bool* _rowMemoized;
 	
@@ -42,7 +44,9 @@ public:
 
 	LEDMatrixBits(
 			size_t rows,
-			size_t columns
+			size_t columns,
+			bool columnControlBitOn = LOW,
+			bool rowControlBitOn = LOW
 		);
 		
 	virtual ~LEDMatrixBits();

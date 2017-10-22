@@ -21,61 +21,66 @@
 
 // #define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
 // #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
+#if TWENTY_FOUR_BIT_COLOR
+#define MAX_SCAN_PASS_COUNT 15
+#else
+#define MAX_SCAN_PASS_COUNT 3
+#endif
 
 const unsigned long UPDATE_INTERVAL = 2000;
 
-RGBLEDMatrix* gSingleton = NULL;
+static RGBLEDMatrix* gSingleton = NULL;
 
 RGBLEDMatrix::RGBLEDMatrix( 
 	int rows,
 	int columns,
-	int slavePin,
-	RGBLEDBitLayout bitLayout
-) :		TimerAction(UPDATE_INTERVAL),
+	RGBLEDBitLayout bitLayout,
+	bool columnControlBitOn,
+	bool rowControlBitOn,
+	int slavePin		
+) :		BaseLEDMatrix(
+				rows,
+				columns,
+				3,
+				MAX_SCAN_PASS_COUNT,
+				columnControlBitOn,
+				rowControlBitOn,
+				slavePin
+			),
 		_bitLayout(bitLayout),
-		_rows(rows),
-		_columns(columns),
-		_screen_data(NULL),
-		_curScreenBitFrames(NULL),
-		_screenBitFrames(),
-		_screenBitFrameToggle(false),
-		_scanPass(1),
-		_scanRow(0),
-		_isDrawingCount(0),
-		_spi(slavePin)
+		_screen_data(NULL)
 {
 
 }
 
 void RGBLEDMatrix::setup() {
+	this->BaseLEDMatrix::setup();
+	
 	if (_screen_data == NULL) {
 		_screen_data = new MutableRGBImage(this->rows(), this->columns());
-		
-		for (int i = 0; i < 2*MAX_SCAN_PASS_COUNT; i++) {
-			_screenBitFrames[i] = new LEDMatrixBits(this->rows(), this->columns()*3);
-		}
-	
-		_curScreenBitFrames = &_screenBitFrames[0];
-
-		if (gSingleton == nullptr) {
-			gSingleton = this;
-		}
-		
-		_spi.setup();
 	}
 }
 
 RGBLEDMatrix::~RGBLEDMatrix() {
 	if (_screen_data != NULL) {
 		delete _screen_data;
-		for (int i = 0; i < 2*MAX_SCAN_PASS_COUNT; i++) {
-			delete _screenBitFrames[i];
-		}
-		_curScreenBitFrames = NULL;
 	}
 }
 
-size_t RGBLEDMatrix::maxFrameCountForValue(ColorType value) {
+bool RGBLEDMatrix::matrixNeedsUpdate(void) const {
+	return this->image().isDirty();
+}
+void RGBLEDMatrix::matrixHasBeenUpdated(void) {
+	this->image().setNotDirty();
+}
+
+void RGBLEDMatrix::generateFrameBits(LEDMatrixBits& frameBits, size_t frame ) const {
+	for (int row = 0; row < this->rows(); row++) {
+		this->setRowBitsForFrame(row, frame, frameBits, *_screen_data);
+	}
+}
+
+size_t RGBLEDMatrix::maxFrameCountForValue(ColorType value) const {
 #if TWENTY_FOUR_BIT_COLOR
 	switch (value) {
 		case 0:
@@ -189,10 +194,10 @@ size_t RGBLEDMatrix::maxFrameCountForValue(ColorType value) {
 void RGBLEDMatrix::setRowBitsForFrame(
 	int row,
 	size_t frame,
-	LEDMatrixBits* framePtr,
-	const RGBImageBase& image
-) {	
-	if (!framePtr->isRowMemoized(row)) {
+	LEDMatrixBits& frameBits,
+	const RGBImageBase& image ) const 
+{	
+	if (!frameBits.isRowMemoized(row)) {
 		bool rowNeedsPower = false;
 		size_t colBitIdx = 0;
 		size_t redBitOffset = 0;
@@ -205,7 +210,7 @@ void RGBLEDMatrix::setRowBitsForFrame(
 			blueBitOffset = 2*this->columns();
 			columnBitIdxIncrement = 1;
 		}
-		for (int col = 0; col < _columns; col++) {
+		for (int col = 0; col < this->columns(); col++) {
 			ColorType rgbValue = image.pixel(row, col);
 			
 			// a form of Binary Code Modulation is used to control
@@ -214,92 +219,38 @@ void RGBLEDMatrix::setRowBitsForFrame(
 			// red
 			ColorType redValue = rgbValue & RED_MASK;
 			if (redValue && frame <= RGBLEDMatrix::maxFrameCountForValue(redValue) ) {
-				framePtr->setColumnControlBit(row,colBitIdx+redBitOffset,true);
+				frameBits.setColumnControlBit(row,colBitIdx+redBitOffset,true);
 				rowNeedsPower = true;
 			}
 			
 			// green
 			ColorType greenValue = rgbValue & GREEN_MASK;
 			if (greenValue && frame <= RGBLEDMatrix::maxFrameCountForValue(greenValue) ) {
-				framePtr->setColumnControlBit(row,colBitIdx+greenBitOffset,true);
+				frameBits.setColumnControlBit(row,colBitIdx+greenBitOffset,true);
 				rowNeedsPower = true;
 			}
 					
 			// blue
 			ColorType blueValue = (rgbValue & BLUE_MASK);
 			if (blueValue && frame <= RGBLEDMatrix::maxFrameCountForValue(blueValue) ) {
-				framePtr->setColumnControlBit(row,colBitIdx+blueBitOffset,true);
+				frameBits.setColumnControlBit(row,colBitIdx+blueBitOffset,true);
 				rowNeedsPower = true;
 			}
 			colBitIdx += columnBitIdxIncrement;
 			
 		}		
-		framePtr->setRowControlBit(row,rowNeedsPower);
-	}	
-}
-
-
-void RGBLEDMatrix::shiftOutCurrentRow( void ) {
-	this->shiftOutRow( _scanRow, _scanPass );
-}
-
-
-void RGBLEDMatrix::action() {    
-	// if this is row 0 for scan pass zero, copy the buffer 
-	// to the data space if dirty
-	if (!this->isDrawing() ) {
-		if (this->image().isDirty()) {
-			this->copyScreenDataToBits(this->image());
-			this->image().setNotDirty();
-		}
+		frameBits.setRowControlBit(row,rowNeedsPower);
 	} 
 }
 
 
-void RGBLEDMatrix::copyScreenDataToBits(const RGBImageBase& image) {
-	size_t idxOffset = 0;
-	if (!_screenBitFrameToggle) {
-		idxOffset = MAX_SCAN_PASS_COUNT;
-	}
-
-	for (int i = 0; i < MAX_SCAN_PASS_COUNT; i++) {
-		_screenBitFrames[i+idxOffset]->reset();		
-	}
-
-	for (int row = 0; row < this->rows(); row++) {
-		for (int i = 0;  i < MAX_SCAN_PASS_COUNT; i++) {
-			this->setRowBitsForFrame(row, i+1, _screenBitFrames[i+idxOffset], image);
-		}
-	}
-	
-	noInterrupts(); // disable all interrupts
-	_screenBitFrameToggle = !_screenBitFrameToggle;
-	_curScreenBitFrames = &_screenBitFrames[0+idxOffset];
-	interrupts(); // enable all interrupts
-}
-
-void RGBLEDMatrix::shiftOutRow( int row, int scanPass ) {
-	_curScreenBitFrames[scanPass-1]->transmitRow(row, _spi);
-}
-
-void RGBLEDMatrix::incrementScanRow( void ) {	
-	_scanRow++;
-	if (_scanRow >= this->rows()) {
-		_scanRow = 0;
-		_scanPass++;
-		if (_scanPass > MAX_SCAN_PASS_COUNT) {
-			_scanPass = 1;
-		}
-	}
-}
-
 // Number of 5 microsecond units
-static unsigned int multiplier5microseconds( int scanPass ) {
-	int mulitplier = 1;
+unsigned int RGBLEDMatrix::multiplier5microseconds( size_t frame ) const {
+	unsigned int mulitplier = 1;
 #if TWENTY_FOUR_BIT_COLOR
-	mulitplier = scanPass/4+1;
+	mulitplier = frame/4+1;
 #else
-	switch (scanPass) {
+	switch (frame) {
 		case 2:
 			mulitplier = 3;
 			break;
@@ -311,139 +262,3 @@ static unsigned int multiplier5microseconds( int scanPass ) {
 
 	return  mulitplier;
 }
-
-#if (defined(__arm__) && defined(TEENSYDUINO))
-//
-// On the Teensy ARM boards, use the TimerThree library to drive scan timing
-//
-#include <TimerThree.h>
-
-void time3InteruptHandler( void ) {
-	Timer3.stop();
-	gSingleton->shiftOutCurrentRow();
-	// reload the timer
-	Timer3.setPeriod(gSingleton->nextTimerInterval());
-  	Timer3.start(); 
-  	// update scan row. Done outside of interrupt stoppage since execution time can
-  	// be inconsistent, which would lead to vary brightness in rows.
-  	gSingleton->incrementScanRow();
-	
-}
-
-void RGBLEDMatrix::startScanning(void) {
-	this->setup();
-	
-	Timer3.initialize(this->nextTimerInterval());
-	Timer3.attachInterrupt(time3InteruptHandler);
-	Timer3.start();
-}
-
-void RGBLEDMatrix::stopScanning(void) {
-	Timer3.stop();
-	Timer3.detachInterrupt();
-}
-
-unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	// Calculates the microseconds for each scan
-	
-	return  5*multiplier5microseconds( _scanPass );
-}
-
-
-#elif defined ( ESP8266 )
-
-//
-// On the ESP8266 boards, use the timer0 to drive scan timing
-// Use D5 (GPIO14) as CLK and D7 (CPIO13) as SER
-//
-
-void inline timer0InteruptHandler (void){
-	gSingleton->shiftOutCurrentRow();
-	// reload the timer
- 	timer0_write(ESP.getCycleCount() + 84 * gSingleton->nextTimerInterval());
-  	// update scan row. Done outside of interrupt stoppage since execution time can
-  	// be inconsistent, which would lead to vary brightness in rows.
-  	gSingleton->incrementScanRow();
-}
-
-void RGBLEDMatrix::startScanning(void) {
-	this->setup();
-	
-	noInterrupts();
-	timer0_isr_init();
-	timer0_attachInterrupt(timer0InteruptHandler);
- 	timer0_write(ESP.getCycleCount() + 84 * gSingleton->nextTimerInterval());
-	interrupts();
-}
-
-void RGBLEDMatrix::stopScanning(void) {
-	timer0_detachInterrupt();
-}
-
-unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	// Calculates the microseconds for each scan
-
-	return  5*multiplier5microseconds( _scanPass );
-}
-
-#elif defined(ARDUINO_SAMD_ZERO)||defined(_SAM3XA_)
-// no timer code for the Due or Zero yet
-
-#else
-//
-// On normal Arduino board (Uno, Nano, etc), use the timer interrupts to drive the
-// scan timing. 
-//
-
-#define BASE_SCAN_TIMER_INTERVALS 12
-
-void RGBLEDMatrix::startScanning(void) {
-	this->setup();
-
-	noInterrupts(); // disable all interrupts
-	
-  	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
-
-	// SET timer2 to count up mode
-	TCCR2A &= ~((1<<WGM21) | (1<<WGM20));
-	TCCR2B &= ~(1<<WGM22);
-
-	// set clock to I/O clock
-  	ASSR &= ~(1<<AS2);
- 
-  	// overflow only mode
-  	TIMSK2 &= ~(1<<OCIE2A);
-  	
-  	// configure to fire about every 5 micro-second 
-	TCCR2B |= (1<<CS22) ; 
-	TCCR2B &= ~(1<<CS20);
-	TCCR2B &= ~(1<<CS21);
-
-	// load counter start point and enable the timer
-	TCNT2 = this->nextTimerInterval();
-	TIMSK2 |= (1<<TOIE2);
-	
-  	interrupts(); // enable all interrupts
-}
-
-void RGBLEDMatrix::stopScanning(void) {
-  	TIMSK2 &= ~(1<<TOIE2); // disable timer overflow interupt
-}
-
-unsigned int RGBLEDMatrix::nextTimerInterval(void) const {
-	return  max(257-multiplier5microseconds( _scanPass )*BASE_SCAN_TIMER_INTERVALS, 0 );
-}
-
-
-ISR(TIMER2_OVF_vect) {
-	noInterrupts(); 
-	// shift out next row
-	gSingleton->shiftOutCurrentRow();
-	// reload the timer
-	TCNT2 = gSingleton->nextTimerInterval();
-  	interrupts(); 
-  	// update scan row. Done outside of interrupt stoppage since execution time can
-  	// be inconsistent, which would lead to vary brightness in rows.
-  	gSingleton->incrementScanRow();
-}
-#endif
