@@ -53,7 +53,7 @@ BaseLEDMatrix::BaseLEDMatrix(
 
 void BaseLEDMatrix::setup() {
 	if (_curScreenBitFrames == NULL) {
-		for (int i = 0; i < 2*_pwmCycleScanCount; i++) {
+		for (unsigned int i = 0; i < 2*_pwmCycleScanCount; i++) {
 			_screenBitFrames[i] = new LEDMatrixBits(
 										this->rows(),
 										this->columns()*_columnBitWidth,
@@ -74,7 +74,7 @@ void BaseLEDMatrix::setup() {
 
 BaseLEDMatrix::~BaseLEDMatrix() {
 	if (_screenBitFrames != NULL) {
-		for (int i = 0; i < 2*_pwmCycleScanCount; i++) {
+		for (unsigned int i = 0; i < 2*_pwmCycleScanCount; i++) {
 			delete _screenBitFrames[i];
 		}
 		delete _screenBitFrames;

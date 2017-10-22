@@ -39,8 +39,8 @@ private:
 	LEDMatrixBits **_screenBitFrames;
 	bool _screenBitFrameToggle;
 	
-	int _scanPass;
-	int _scanRow;
+	unsigned int _scanPass;
+	unsigned int _scanRow;
 	int _isDrawingCount;
 
 	SPIConnection	_spi;
