@@ -69,7 +69,7 @@ public:
 		);
 	virtual ~BaseLEDMatrix();
 	
-	void setup();  
+	virtual void setup();  
 
 	void startDrawing(void)   			{ _isDrawingCount++; }
 	void stopDrawing(void)    			{ _isDrawingCount--; if (_isDrawingCount < 0) { _isDrawingCount = 0; }}

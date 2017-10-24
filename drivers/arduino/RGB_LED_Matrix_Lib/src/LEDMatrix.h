@@ -51,7 +51,7 @@ public:
 		);
 	virtual ~LEDMatrix();
 	
-	void setup();
+	virtual void setup();
 	
 	MutableGlyph& image(void)				{ return *_screen_data; }
 	const MutableGlyph& image(void) const	{ return *_screen_data; }

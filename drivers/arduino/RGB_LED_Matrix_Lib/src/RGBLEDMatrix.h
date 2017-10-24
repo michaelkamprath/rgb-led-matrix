@@ -64,7 +64,7 @@ public:
 		);
 	virtual ~RGBLEDMatrix();
 	
-	void setup();
+	virtual void setup();
 	
 	MutableRGBImage& image(void)				{ return *_screen_data; }
 	const MutableRGBImage& image(void) const	{ return *_screen_data; }
