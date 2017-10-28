@@ -16,17 +16,8 @@
 //     You should have received a copy of the GNU General Public License
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 #include "LEDMatrixBits.h"
-
-#if 0
-#define COLUMN_CONTROL_BIT_ON	HIGH
-#define ROW_CONTROL_BIT_ON		LOW
-
-#if ROW_CONTROL_BIT_ON
-#define ROW_CONTROL_BIT_OFF		LOW
-#else
-#define ROW_CONTROL_BIT_OFF		HIGH
-#endif
-
+#ifndef ICACHE_RAM_ATTR
+#define ICACHE_RAM_ATTR
 #endif
 
 const unsigned char BYTE_BIT_BITMASK[8] = {
@@ -198,7 +189,7 @@ void LEDMatrixBits::setColumnControlBit( size_t row, size_t column, bool isOn ) 
 	}
 }
 
-void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
+ICACHE_RAM_ATTR void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
 	unsigned char *dataPtr = _data + _controlBitBytesPerRow*row;
 	conn.startTransaction();
 	for (size_t i = 0; i < _controlBitBytesPerRow; i++ ) {

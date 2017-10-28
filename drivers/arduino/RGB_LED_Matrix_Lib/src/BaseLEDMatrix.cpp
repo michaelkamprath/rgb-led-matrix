@@ -17,6 +17,9 @@
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "BaseLEDMatrix.h"
+#ifndef ICACHE_RAM_ATTR
+#define ICACHE_RAM_ATTR
+#endif
 
 #define SPICACHEPADBITS(rows,cols)	(rows*3 + cols)%8 ? 8 - (rows*3 + cols)%8 : 0
 #define SPICACHESIZE(rows,cols)	1+((rows*3 + cols)-1)/8
@@ -111,11 +114,11 @@ void BaseLEDMatrix::shiftOutCurrentRow( void ) {
 	this->shiftOutRow( _scanRow, _scanPass );
 }
 
-void BaseLEDMatrix::shiftOutRow( int row, int scanPass ) {
+ICACHE_RAM_ATTR void BaseLEDMatrix::shiftOutRow( int row, int scanPass ) {
 	_curScreenBitFrames[scanPass-1]->transmitRow(row, _spi);
 }
 
-void BaseLEDMatrix::incrementScanRow( void ) {	
+ICACHE_RAM_ATTR void BaseLEDMatrix::incrementScanRow( void ) {	
 	_scanRow++;
 	if (_scanRow >= this->rows()) {
 		_scanRow = 0;
@@ -127,7 +130,7 @@ void BaseLEDMatrix::incrementScanRow( void ) {
 }
 
 // Number of 5 microsecond units
-unsigned int BaseLEDMatrix::multiplier5microseconds( size_t frame ) const {
+ICACHE_RAM_ATTR unsigned int BaseLEDMatrix::multiplier5microseconds( size_t frame ) const {
 	// base case does nothing interesting
 	return  1;
 }
@@ -175,23 +178,34 @@ unsigned int BaseLEDMatrix::nextTimerInterval(void) const {
 // On the ESP8266 boards, use the timer0 to drive scan timing
 // Use D5 (GPIO14) as CLK and D7 (CPIO13) as SER
 //
+#define IRAM0     __attribute__((section(".iram0.text")))
 
-void inline timer0InteruptHandler (void){
+inline void timer0InteruptHandler (void){
 	gSingleton->shiftOutCurrentRow();
 	// reload the timer
  	timer0_write(ESP.getCycleCount() + 84 * gSingleton->nextTimerInterval());
   	// update scan row. Done outside of interrupt stoppage since execution time can
   	// be inconsistent, which would lead to vary brightness in rows.
+	interrupts();
   	gSingleton->incrementScanRow();
 }
 
 void BaseLEDMatrix::startScanning(void) {
+	static bool firstCall = true;
+
 	this->setup();
 	
 	noInterrupts();
 	timer0_isr_init();
 	timer0_attachInterrupt(timer0InteruptHandler);
- 	timer0_write(ESP.getCycleCount() + 84 * this->nextTimerInterval());
+	
+	// dirty hack to make sure we don't miss the first ISR call upon start up
+	uint32_t tickCount = ESP.getCycleCount() + 84 * this->nextTimerInterval();
+	if (firstCall) {
+		tickCount += 5000;
+		firstCall = false;
+	}
+ 	timer0_write(tickCount);
 	interrupts();
 }
 
@@ -199,7 +213,7 @@ void BaseLEDMatrix::stopScanning(void) {
 	timer0_detachInterrupt();
 }
 
-unsigned int BaseLEDMatrix::nextTimerInterval(void) const {
+ICACHE_RAM_ATTR unsigned int BaseLEDMatrix::nextTimerInterval(void) const {
 	// Calculates the microseconds for each scan
 	return  5*this->multiplier5microseconds( _scanPass );
 }

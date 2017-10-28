@@ -60,7 +60,11 @@ public:
 			RGBLEDBitLayout bitLayout = INDIVIDUAL_LEDS,
 			bool columnControlBitOn = LOW,
 			bool rowControlBitOn = LOW,
+#if defined ( ESP8266 )
+			int slavePin = D8	
+#else
 			int slavePin = 10	
+#endif
 		);
 	virtual ~RGBLEDMatrix();
 	

@@ -47,7 +47,11 @@ public:
 			int columns,
 			bool columnControlBitOn = LOW,
 			bool rowControlBitOn = LOW,
-			int slavePin = 10
+#if defined ( ESP8266 )
+			int slavePin = D8	
+#else
+			int slavePin = 10	
+#endif
 		);
 	virtual ~LEDMatrix();
 	
