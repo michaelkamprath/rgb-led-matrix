@@ -178,8 +178,6 @@ unsigned int BaseLEDMatrix::nextTimerInterval(void) const {
 // On the ESP8266 boards, use the timer0 to drive scan timing
 // Use D5 (GPIO14) as CLK and D7 (CPIO13) as SER
 //
-#define IRAM0     __attribute__((section(".iram0.text")))
-
 inline void timer0InteruptHandler (void){
 	gSingleton->shiftOutCurrentRow();
 	// reload the timer
