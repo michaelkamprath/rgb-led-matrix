@@ -25,6 +25,8 @@ private:
 	unsigned long  _lastLoopMicros;
 	unsigned long  _actionAverageMicros;
 	
+	bool _isActive;
+	
 	unsigned long timeSinceLast(void) const {
 		unsigned long curMicros = micros();
 		// current micros is less than last micros. Since micros is 
@@ -45,20 +47,23 @@ protected:
 public:
   TimerAction(unsigned long intervalMicros)
   		: 	_interval(intervalMicros),
-  			_actionAverageMicros(0)
+  			_actionAverageMicros(0),
+  			_isActive(true)
   	{
 		_interval = intervalMicros;
 		_lastLoopMicros = micros();
 	}
 
 	virtual void loop() {
-		unsigned long delta = this->timeSinceLast();
-		if ( _interval <= delta ) {
-			_lastLoopMicros = micros();
-			this->action();
-			// at this point this->timeSinceLast() is the time it took to 
-			// do the action;
-			_actionAverageMicros = (_actionAverageMicros+this->timeSinceLast())/2;
+		if (this->isActive()) {
+			unsigned long delta = this->timeSinceLast();
+			if ( _interval <= delta ) {
+				_lastLoopMicros = micros();
+				this->action();
+				// at this point this->timeSinceLast() is the time it took to 
+				// do the action;
+				_actionAverageMicros = (_actionAverageMicros+this->timeSinceLast())/2;
+			}
 		}
 	}
 
@@ -72,6 +77,17 @@ public:
 	
 	void setIntervalMillis(unsigned long intervalMillis) {
 		_interval = intervalMillis*1000;
+	}
+	
+	virtual void start(void) {
+		_isActive = true;
+		_lastLoopMicros = micros();
+	}
+	virtual void stop(void) {
+		_isActive = false;
+	}
+	bool isActive(void) const {
+		return _isActive;
 	}
 	
 };
