@@ -19,6 +19,10 @@
 #include <SPI.h>
 #include "SPIConnection.h"
 
+#ifndef ICACHE_RAM_ATTR
+#define ICACHE_RAM_ATTR
+#endif
+
 SPIConnection::SPIConnection(
 	int slavePin
 )	:	_slavePin(slavePin)
@@ -35,16 +39,16 @@ void SPIConnection::setup() {
 	SPI.begin();
 }
 
-void SPIConnection::startTransaction(void) {
+ICACHE_RAM_ATTR void SPIConnection::startTransaction(void) {
 	SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE0));
 	digitalWrite (_slavePin, LOW);
 }
 
-void SPIConnection::transmitByte(unsigned char data) {
+ICACHE_RAM_ATTR void SPIConnection::transmitByte(unsigned char data) {
 	SPI.transfer(data);
 }
 
-void SPIConnection::endTransaction(void) {
+ICACHE_RAM_ATTR void SPIConnection::endTransaction(void) {
 	digitalWrite (_slavePin, HIGH);
 	SPI.endTransaction();
 }

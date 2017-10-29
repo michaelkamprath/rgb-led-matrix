@@ -62,11 +62,14 @@ public:
 			ColorType foreground,
 			ColorType background = TRANSPARENT_COLOR
 		) const;
+
+	void streamFrameToSerial(void);
 };
 
 class MutableGlyph : public GlyphBase {
 private:
 	bool* _bits;
+	bool _dirty;
 		
 public:
 
@@ -81,10 +84,15 @@ public:
 	virtual const bool* bits(void) const	{ return _bits; }
 	bool* bits(void)						{ return _bits; }
 	
-	virtual bool isProgMem(void) const			{ return false; }
+	virtual bool isProgMem(void) const		{ return false; }
 	
+	void eraseAll();
 	void setBit( int row, int column );
 	void clearBit( int row, int column );
+
+	bool isDirty( void) const				{ return _dirty; }
+	void setNotDirty()						{ _dirty = false; }
+
 };
  
 class Glyph : public GlyphBase {

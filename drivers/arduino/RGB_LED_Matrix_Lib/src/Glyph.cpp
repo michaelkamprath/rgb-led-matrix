@@ -114,10 +114,29 @@ bool* GlyphBase::generateBitBoolArray(
 				boolArray[bitIdx] = ( ( dataByte & BIT_MASKS[bitIdx%8] ) != 0 );
 			}
 		}
+	} else {
+		// zero out array
+		memset(boolArray, 0, rows*columns);
 	}
 	
 	return boolArray;
 }
+
+void GlyphBase::streamFrameToSerial(void) {
+	for (int row = 0; row < this->rows(); row++) {
+		Serial.print(F("     "));
+		for (int i = 0; i < this->columns(); i++) {
+			if (this->getBit(row, i)) {
+			   Serial.print('1');
+			}
+			else {
+			   Serial.print('0');
+			}
+		}
+		Serial.print(F("\n"));
+	}
+}
+
 
 /***************************************
  *
@@ -133,7 +152,8 @@ MutableGlyph::MutableGlyph(
 	bool isFromProgramSpace
 )
 	:	GlyphBase( rows, columns ),
-		_bits(GlyphBase::generateBitBoolArray(rows, columns, data, isFromProgramSpace))
+		_bits(GlyphBase::generateBitBoolArray(rows, columns, data, isFromProgramSpace)),
+		_dirty(false)
 {
 }
 
@@ -152,15 +172,21 @@ MutableGlyph::~MutableGlyph() {
 	delete _bits;
 }
 
+void MutableGlyph::eraseAll() {
+	memset(_bits, 0, this->rows()*this->columns());
+}
+
 void MutableGlyph::setBit( int row, int column ) {
 	int bitIdx = row*this->columns() + column;
 	
 	_bits[bitIdx] = true;
+	_dirty = true;
 }
 void MutableGlyph::clearBit( int row, int column ) {
 	int bitIdx = row*this->columns() + column;
 
 	_bits[bitIdx] = false;
+	_dirty = true;
 }
 
 /***************************************

@@ -16,9 +16,9 @@
 //     You should have received a copy of the GNU General Public License
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 #include "LEDMatrixBits.h"
-
-#define COLUMN_CONTROL_BIT_ON	LOW
-#define ROW_CONTROL_BIT_ON		LOW
+#ifndef ICACHE_RAM_ATTR
+#define ICACHE_RAM_ATTR
+#endif
 
 const unsigned char BYTE_BIT_BITMASK[8] = {
 	B10000000,
@@ -43,22 +43,21 @@ const unsigned char HIGH_REMAINING_BIT_PRESETS[8] = {
 };
 
 
-#if ROW_CONTROL_BIT_ON
-#define ROW_CONTROL_BIT_OFF		LOW
-#else
-#define ROW_CONTROL_BIT_OFF		HIGH
-#endif
 
 #define BYTES_FOR_ROW_CONTROL_BITS(rows,cols)	(1+(rows+cols-1)/8)
 
 LEDMatrixBits::LEDMatrixBits(
 	size_t rows,
-	size_t columns
+	size_t columns,
+	bool columnControlBitOn,
+	bool rowControlBitOn
 )	: 	_dataByteCount((BYTES_FOR_ROW_CONTROL_BITS(rows,columns))*rows),
 		_data(new unsigned char[BYTES_FOR_ROW_CONTROL_BITS(rows,columns)*rows]),
 		_columns(columns),
 		_rows(rows),
 		_controlBitBytesPerRow(BYTES_FOR_ROW_CONTROL_BITS(rows,columns)),
+		_columnControlBitOn(columnControlBitOn),
+		_rowControlBitOn(rowControlBitOn),
 		_rowMemoized(new bool[rows])
 {
 	this->reset();
@@ -78,14 +77,11 @@ bool LEDMatrixBits::isRowMemoized(int row) const {
 	return _rowMemoized[row];
 }
 void LEDMatrixBits::setAllOff(void) {
-	// first, blast everything to the column of
+	// first, blast everything to the column off	
+	unsigned char clearValue = _columnControlBitOn ? B00000000 : B11111111;
 	memset(
 			_data,
-#if COLUMN_CONTROL_BIT_ON
-			B00000000,
-#else
-			B11111111,
-#endif
+			clearValue,
 			_dataByteCount
 		);
 		
@@ -109,15 +105,12 @@ void LEDMatrixBits::setRowControlBit( size_t row, bool isOn ) {
 	
 	if (isOn) {
 		for (size_t i = 0; i < this->rows(); i++) {
-#if ROW_CONTROL_BIT_ON
-			if (i == rowBit) {
-#else
-			if (i != rowBit) {
-#endif
+
+			if ( (_rowControlBitOn&&(i == rowBit)) || ((!_rowControlBitOn)&&(i != rowBit)) ) {
 				*dataPtr |= BYTE_BIT_BITMASK[curByteBit];
 			} else {
 				*dataPtr &= ~(BYTE_BIT_BITMASK[curByteBit]);
-			}			
+			}		
 			curByteBit++;
 			if (curByteBit >= 8) {
 				dataPtr++;
@@ -131,7 +124,7 @@ void LEDMatrixBits::setRowControlBit( size_t row, bool isOn ) {
 		this->setNBitsTo(
 				startControlBitsForRow,
 				this->rows(),
-				ROW_CONTROL_BIT_OFF
+				!_rowControlBitOn
 			);
 	}
 	
@@ -189,18 +182,14 @@ void LEDMatrixBits::setColumnControlBit( size_t row, size_t column, bool isOn ) 
 	size_t byteIdx = _controlBitBytesPerRow*row + column/8;
 	size_t bitIdxInCurByte = column%8;
 	
-#if COLUMN_CONTROL_BIT_ON
-	if (isOn) {
-#else
-	if (!isOn) {
-#endif
+	if (isOn == _columnControlBitOn) {
 		_data[byteIdx] |= BYTE_BIT_BITMASK[bitIdxInCurByte];
 	} else {
 		_data[byteIdx] &= ~BYTE_BIT_BITMASK[bitIdxInCurByte];
 	}
 }
 
-void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
+ICACHE_RAM_ATTR void LEDMatrixBits::transmitRow(int row, SPIConnection& conn) const {
 	unsigned char *dataPtr = _data + _controlBitBytesPerRow*row;
 	conn.startTransaction();
 	for (size_t i = 0; i < _controlBitBytesPerRow; i++ ) {
