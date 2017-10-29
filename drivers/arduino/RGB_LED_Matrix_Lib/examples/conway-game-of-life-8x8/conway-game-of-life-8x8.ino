@@ -195,6 +195,7 @@ RGBLEDMatrix leds(8,8);
 CellUniverse uni(leds, 500000);
 
 void setup() {
+  leds.setup();
   // create starting life positions
   // first, pick a rando fraction between 0.25 and 0.75 of cells.
   randomSeed(analogRead(0));

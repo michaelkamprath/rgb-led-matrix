@@ -31,6 +31,17 @@ Using the Teensy 3.x as the driving micro-controller for the RGB LED Matrix is a
 
 To use this Teensy 3.x driver in the Arduino IDE, add the folder `RGB_LED_Matrix_Lib` as a library as described in [this document](https://www.arduino.cc/en/Guide/Libraries). Also, ensure that the Arduino IDE has been updated to support Teensy development ([see here for more information](https://www.pjrc.com/teensy/td_download.html)).
 
+## ESP8266 Boards
+### Wemos D1 Mini
+This is a 3.3v logic level board.
+
+| LED Matrix Connection | Wemos D1 Mini | Notes |
+|:-:|:-:|---|
+| **+5V** | 5V |  |
+| **GND** | GND |  |
+| **SER** | D7 | SPI MOSI Pin |
+| **CLK** | D5 | SPI SCK Pin |
+| **LATCH** | D8  | SS pin | 
 
 ## Color Modes
 This driver can support either 6-bit or 24-bit color. By default, this library uses 6-bit color. You can enable 24 bit color in this library by setting the preprocessor macro `TWENTY_FOUR_BIT_COLOR` to a value of 1 (note, not in your `ino` file, but at compile time for all files). You can do this either by editing the `RGBImage.h` file or setting a compiler flag. However, note that 24 bit color requires more RAM than an Arduino Uno or Nano has. Due its memory requirements, 24 bit color should work on most 32 bit boards and the Arduino Mega 2560. 24 bit color has been tested to work on the following boards:

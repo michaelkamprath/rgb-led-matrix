@@ -4,6 +4,8 @@
 RGBLEDMatrix leds(8,8);
 
 void setup() {
+  leds.setup();
+  
   leds.image().drawLine(0,0,0,7,RED_COLOR);
   leds.image().drawLine(1,0,1,7,ORANGE_COLOR);
   leds.image().drawLine(2,0,2,7,YELLOW_COLOR);

@@ -19,7 +19,7 @@
 #define __RGBIMAGE12BIT_H__
 
 #ifndef TWENTY_FOUR_BIT_COLOR
-#define TWENTY_FOUR_BIT_COLOR (defined(__arm__) && defined(TEENSYDUINO))||defined(__AVR_ATmega2560__)
+#define TWENTY_FOUR_BIT_COLOR (defined(__arm__) && defined(TEENSYDUINO))||defined(__AVR_ATmega2560__)||defined ( ESP8266 )
 #endif
 /***
 

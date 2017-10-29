@@ -92,6 +92,7 @@ RGBLEDMatrix leds(10,10);
 Animation ani(&leds);
 
 void setup() {
+  leds.setup();
   leds.startScanning();
 }
 

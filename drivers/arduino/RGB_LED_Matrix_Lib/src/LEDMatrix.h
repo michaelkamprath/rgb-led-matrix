@@ -16,48 +16,35 @@
 //     You should have received a copy of the GNU General Public License
 //     along with RGB Matrix Project.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef __RGBLEDMATRIX_H__
-#define __RGBLEDMATRIX_H__
+#ifndef __LEDMATRIX_H__
+#define __LEDMATRIX_H__
 #include "BaseLEDMatrix.h"
-#include "RGBImage.h"
+#include "Glyph.h"
 
-class RGBLEDMatrix : public BaseLEDMatrix {
-public:
-	typedef enum {
-		// Each individual LED's RGB bits are consecutive in column order.
-		// For a 4-column matrix, each row is ordered: RGB-RGB-RGB-RGB
-		INDIVIDUAL_LEDS,	
-		
-		// All elements of the same color are consecutive in column order. The color
-		// are order Red, Green Blue
-		// For a 4-column matrix, each row is ordered: RRRR-GGGG-BBBB
-		RGB_GROUPS
-	} RGBLEDBitLayout;
 
-private:
-	const RGBLEDBitLayout _bitLayout;
-	MutableRGBImage *_screen_data;
+class LEDMatrix : public BaseLEDMatrix {
 	
-
+private:
+	MutableGlyph *_screen_data;	
+	
 	void setRowBitsForFrame(
 			int row,
 			size_t frame,
 			LEDMatrixBits& frameBits,
-			const RGBImageBase& image
-		) const; 
-	size_t maxFrameCountForValue(ColorType value) const;
+			const GlyphBase& image
+		) const;
+
 protected:
 	virtual void generateFrameBits(LEDMatrixBits& frameBits, size_t frame ) const;
 	virtual bool matrixNeedsUpdate(void) const;
 	virtual void matrixHasBeenUpdated(void);
-	virtual unsigned int multiplier5microseconds( size_t frame ) const;
+	
 public:
   
 
-	RGBLEDMatrix(
+	LEDMatrix(
 			int rows,
 			int columns,
-			RGBLEDBitLayout bitLayout = INDIVIDUAL_LEDS,
 			bool columnControlBitOn = LOW,
 			bool rowControlBitOn = LOW,
 #if defined ( ESP8266 )
@@ -66,13 +53,12 @@ public:
 			int slavePin = 10	
 #endif
 		);
-	virtual ~RGBLEDMatrix();
+	virtual ~LEDMatrix();
 	
 	virtual void setup();
 	
-	MutableRGBImage& image(void)				{ return *_screen_data; }
-	const MutableRGBImage& image(void) const	{ return *_screen_data; }
-  
+	MutableGlyph& image(void)				{ return *_screen_data; }
+	const MutableGlyph& image(void) const	{ return *_screen_data; }
 };
 
 #endif //__SCREEN_H__

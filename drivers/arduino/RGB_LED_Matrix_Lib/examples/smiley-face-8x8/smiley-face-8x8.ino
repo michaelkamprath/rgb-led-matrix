@@ -5,6 +5,7 @@
 RGBLEDMatrix leds(8,8);
 
 void setup() {
+  leds.setup();
   // draw face
   // outer Circle
   leds.image().drawLine( 0, 2, 0, 5, ORANGE_COLOR);

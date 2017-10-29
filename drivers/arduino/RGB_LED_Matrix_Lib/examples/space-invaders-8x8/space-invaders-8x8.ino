@@ -298,6 +298,7 @@ RGBAnimationSequence::AnimationItem aniItems[ANIMATION_ITEMS_SIZE] {
 RGBAnimationSequence animation( aniItems, ANIMATION_ITEMS_SIZE);
 
 void setup() {
+    leds.setup();
     leds.startScanning();
 }
 
