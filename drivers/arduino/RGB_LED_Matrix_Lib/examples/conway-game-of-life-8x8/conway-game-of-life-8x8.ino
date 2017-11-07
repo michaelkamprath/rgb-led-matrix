@@ -198,7 +198,11 @@ void setup() {
   leds.setup();
   // create starting life positions
   // first, pick a rando fraction between 0.25 and 0.75 of cells.
+#ifdef RANDOM_REG32
+  randomSeed(RANDOM_REG32);
+#else
   randomSeed(analogRead(0));
+#endif
   int numTotalCells = leds.rows()*leds.columns();
   int countStartingCells = random(0.25*numTotalCells, 0.75*numTotalCells);
 
