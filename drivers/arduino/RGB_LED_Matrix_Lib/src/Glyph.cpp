@@ -122,7 +122,7 @@ bool* GlyphBase::generateBitBoolArray(
 	return boolArray;
 }
 
-void GlyphBase::streamFrameToSerial(void) {
+void GlyphBase::streamToSerial(void) {
 	for (int row = 0; row < this->rows(); row++) {
 		Serial.print(F("     "));
 		for (int i = 0; i < this->columns(); i++) {
@@ -188,6 +188,125 @@ void MutableGlyph::clearBit( int row, int column ) {
 	_bits[bitIdx] = false;
 	_dirty = true;
 }
+
+void MutableGlyph::placeGlyphAt( const GlyphBase& glyph, int row, int column ) {
+	if (	row >= this->rows()
+			|| column >= this->columns()
+			|| (glyph.columns() + column <= 0 )
+			|| (glyph.rows() + row <= 0) 
+		) {
+		return;
+	}
+
+	_dirty = true;
+	int imageX = 0;
+	int thisX = column;
+	if (column < 0) {
+		imageX = -column;
+		thisX = 0;
+	}
+	
+	int imageColumns = glyph.columns() - imageX;
+	int thisColumns = column <= 0 ? this->columns() : this->columns() - column;
+	if (imageColumns > thisColumns) {
+		imageColumns = thisColumns;
+	}
+
+	int imageY = 0;
+	int startRow = row;
+	if (row < 0) {
+		imageY = -row;
+		startRow = 0;
+	}
+
+	for ( int yT = startRow, yO = imageY; (yT < this->rows()) && (yO < glyph.rows()); yT++, yO++ ) { 
+		for (int colCounter = 0; colCounter < imageColumns; colCounter++) {
+			if (glyph.getBit(yO, imageX+colCounter)) {
+				this->setBit(yT, thisX+colCounter);
+			} else {
+				this->clearBit(yT, thisX+colCounter);
+			}
+		}
+	}
+}
+
+void MutableGlyph::drawLine( 
+		int startRow,
+		int startColumn,
+		int stopRow,
+		int stopColumn
+	)
+{
+	_dirty = true;
+	if ( stopColumn != startColumn ) {
+		float delta_col = stopColumn - startColumn;
+		float delta_row = stopRow - startRow;
+		
+		if (abs(delta_col) > abs(delta_row)) {
+			for (int col = startColumn; 
+				delta_col < 0 ? col >= stopColumn : col <= stopColumn; 
+				delta_col < 0 ? col-- : col++ ) 
+			{
+				int row = round(startRow + delta_row*(col - startColumn)/delta_col);
+				this->setBit(row, col);
+			}
+		}
+		else {
+			for (int row = startRow; 
+				delta_row < 0 ? row >= stopRow : row <= stopRow; 
+				delta_row < 0 ? row-- : row++ ) 
+			{
+				int col = round(startColumn + delta_col*(row - startRow)/delta_row);
+				this->setBit(row, col);
+			}
+		
+		}
+	}
+	else {
+		float delta_row = stopRow - startRow;
+
+		for ( int row = startRow; 
+			  delta_row < 0 ? row >= stopRow : row <= stopRow; 
+			  delta_row < 0 ? row-- : row++ ) 
+		{
+			this->setBit(row, startColumn);
+		}	
+	}
+}	
+
+void MutableGlyph::drawRectangle( 
+  		int tlRow,
+  		int tlColumn,
+  		int brRow,
+  		int brColumn,
+  		bool fill
+  	)
+{
+	if ( tlRow > brRow || tlColumn > brColumn 
+		|| tlRow >= this->rows() || brRow < 0 
+		|| tlColumn >= this->columns() || brColumn < 0) {
+		return;
+	}
+	
+	_dirty = true;
+	int finalTLRow = min(max(0,tlRow),this->rows()-1);
+	int finalBRRow = min(max(0,brRow),this->rows()-1);
+	int finalTLColumn = min(max(0,tlColumn),this->columns()-1);
+	int finalBRColumn = min(max(0,brColumn),this->columns()-1);
+	
+	for (int row = finalTLRow; row <= finalBRRow; row++ ) {
+		if ( fill || row == finalTLRow || row == finalBRRow ) {
+			for (int i = 0; i < finalBRColumn-finalTLColumn+1; i++) {
+				this->setBit(row, finalTLColumn+i);
+			}
+		}
+		else {
+			this->setBit(row, finalTLColumn);
+			this->setBit(row, finalBRColumn);
+		}
+	}
+}
+
 
 /***************************************
  *

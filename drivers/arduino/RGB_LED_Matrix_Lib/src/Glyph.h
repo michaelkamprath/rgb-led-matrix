@@ -63,7 +63,7 @@ public:
 			ColorType background = TRANSPARENT_COLOR
 		) const;
 
-	void streamFrameToSerial(void);
+	void streamToSerial(void);
 };
 
 class MutableGlyph : public GlyphBase {
@@ -92,6 +92,22 @@ public:
 
 	bool isDirty( void) const				{ return _dirty; }
 	void setNotDirty()						{ _dirty = false; }
+	
+	void placeGlyphAt( const GlyphBase& glyph, int row, int column );
+	void drawLine(
+		int startRow,
+		int startColumn,
+		int stopRow,
+		int stopColumn
+	);
+	void drawRectangle( 
+		int tlRow,
+		int tlColumn,
+		int brRow,
+		int brColumn,
+		bool fill = true
+	);
+
 
 };
  
