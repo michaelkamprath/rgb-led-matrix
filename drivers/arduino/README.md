@@ -19,8 +19,8 @@ The default wiring for connecting the RGB LED Matrix to an Arduino using the ATm
 
 Note that the SPI MISO pin is unused.
 
-## 3.3v Boards
-To use the RGB LED Matrices designed in this project with microcontroller boards that operate at 3.3v, you must convert the 3.3v logic signals to 5V levels. You can easily use a 74HCT125 buffer/line driver chip to do this transformation. For example, you can wire a Teensy 3.6, which is a 3.3v device, to a 74HCT125 chip in the manner shown in the diagram below to get all power and signal lines required to drive the RGB LED Matrix while the Teensy is connected to USB power:
+## 3.3v Logic Level
+To use the RGB LED Matrices designed in this project with microcontroller boards that use a 3.3V logic level, you must convert the 3.3V logic signals to 5V levels to work with the shift registers. You can easily use a 74HCT125 buffer/line driver chip to do this transformation. For example, you can wire a Teensy 3.6, which is a 3.3v device, to a 74HCT125 chip in the manner shown in the diagram below to get all power and signal lines required to drive the RGB LED Matrix while the Teensy is connected to USB power:
 
 ![Teensy 3.6 Circuit to Drive RGB LED Matrix](docs/teensy36_5V_logic_circuit.png)
 
@@ -32,22 +32,23 @@ Using the Teensy 3.x as the driving micro-controller for the RGB LED Matrix is a
 To use this Teensy 3.x driver in the Arduino IDE, add the folder `RGB_LED_Matrix_Lib` as a library as described in [this document](https://www.arduino.cc/en/Guide/Libraries). Also, ensure that the Arduino IDE has been updated to support Teensy development ([see here for more information](https://www.pjrc.com/teensy/td_download.html)).
 
 ## ESP8266 Boards
-### Wemos D1 Mini
-This is a 3.3v logic level board.
+ESP8266 boards are generally 3.3v logic level boards. 
 
-| LED Matrix Connection | Wemos D1 Mini | Notes |
-|:-:|:-:|---|
-| **+5V** | 5V |  |
-| **GND** | GND |  |
-| **SER** | D7 | SPI MOSI Pin |
-| **CLK** | D5 | SPI SCK Pin |
-| **LATCH** | D8  | SS pin | 
+| LED Matrix Connection | Wemos D1 Mini | NodeMCU | Notes |
+|:-:|:-:|:--:|---|
+| **+5V** | 5V | Vin | |
+| **GND** | GND | GND | |
+| **SER** | D7 | D7 | SPI MOSI Pin |
+| **CLK** | D5 | D5 | SPI SCK Pin |
+| **LATCH** | D8  | D8 | SS pin | 
 
 ## Color Modes
 This driver can support either 6-bit or 24-bit color. By default, this library uses 6-bit color. You can enable 24 bit color in this library by setting the preprocessor macro `TWENTY_FOUR_BIT_COLOR` to a value of 1 (note, not in your `ino` file, but at compile time for all files). You can do this either by editing the `RGBImage.h` file or setting a compiler flag. However, note that 24 bit color requires more RAM than an Arduino Uno or Nano has. Due its memory requirements, 24 bit color should work on most 32 bit boards and the Arduino Mega 2560. 24 bit color has been tested to work on the following boards:
 
 * Teensy 3.6 
 * Arduino Mega 2560
+* Wemos D1 mini Lite
+* NodeMCU
 
 ## Bit Layouts
 This driver can support two different bit layouts. The default bit layout assumes each RGB LED is a single unit and each column is wired up with the RGB bits consecutively.  That is, for a 4x4 matrix, the bit layout would look like this:
